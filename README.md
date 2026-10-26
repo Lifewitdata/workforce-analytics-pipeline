@@ -6,7 +6,9 @@
 
 ## Start here
 
-**To view the result:** open `excel/workforce_summary.xlsx`, then change the yellow month selector on Summary. The workbook has an Excel dashboard, department and tenure summaries, salary by level, original-sample attrition comparisons, and an employee ID lookup.
+**To view the Tableau dashboard:** download [Workforce_Recruiting_Dashboard.twbx](dashboard/Workforce_Recruiting_Dashboard.twbx) and open the **Workforce & Recruiting Overview** tab in Tableau. You can also visit [Isfaque Ansari on Tableau Public](https://public.tableau.com/app/profile/isfaque.ansari5273/vizzes). This is a profile link, not a direct dashboard URL.
+
+The Excel model remains part of the complete local project and is withheld from this public repository as noted above.
 
 **To run the project:** from this folder:
 
@@ -15,7 +17,7 @@ python -m pip install -r requirements.txt
 python src/pipeline.py
 ```
 
-Python 3.10+ required. No Alteryx installation, cloud account, API key or database server is needed. Inputs and computed outputs are included. Optional LibreOffice automatically recalculates and checks the workbook if installed; otherwise open the generated workbook in Excel for calculation.
+Python 3.10+ required. No Alteryx installation, cloud account, API key or database server is needed. Synthetic recruiting inputs and aggregate outputs are included; the employee inputs required for an end-to-end run are withheld as noted above. Optional LibreOffice automatically recalculates and checks the workbook if installed; otherwise open the generated workbook in Excel for calculation.
 
 To regenerate the seeded demo inputs deliberately: `python src/pipeline.py --generate-demo`.
 
@@ -29,7 +31,18 @@ HR needs a repeatable monthly pack for workforce size, attrition and recruiting 
 - 2,400 synthetic applications in 12 monthly cohort files; fixed seed 42.
 - 108 month/department/site output groups for January–December 2025.
 - Modular Python pipeline, an executed EDA notebook, independently reconciled SQLite KPI query, two aggregation implementations, measured benchmark, Excel model and refresh runbook.
-- Optional one-page Tableau specification. No Tableau workbook built. Alteryx was removed from scope at the user's request; no Alteryx execution or file is claimed.
+- Supplied Tableau packaged workbook with one dashboard, 12 worksheets and an embedded Hyper extract; see [dashboard documentation](dashboard/README.md).
+- Alteryx was removed from scope at the user's request; no Alteryx execution or file is claimed.
+
+## Tableau dashboard
+
+- [Download the packaged workbook](dashboard/Workforce_Recruiting_Dashboard.twbx)
+- [View the Tableau Public profile](https://public.tableau.com/app/profile/isfaque.ansari5273/vizzes)
+- [Dashboard documentation and review checklist](dashboard/README.md)
+
+The supplied workbook contains **Workforce & Recruiting Overview**, with six KPI cards, headcount change, headcount and attrition trends, department attrition, a location heatmap and a recruiting summary. It includes a reporting-month parameter, an illustrative attrition threshold, and department/location filters.
+
+The dashboard uses a 1400 × 1600 layout; scroll vertically to reach the recruiting table. Its default selection is December 2025. The package and XML structure were inspected; native Tableau rendering and interaction behaviour have not been independently verified here. All monthly history and recruiting results are synthetic educational data.
 
 ## Workflow
 
@@ -48,7 +61,7 @@ flowchart TD
 
 ![Workflow diagram](docs/workflow_diagram.png)
 
-Tools: Python, pandas, NumPy, SQLite, matplotlib, openpyxl, Excel formulas and optional LibreOffice for independent recalculation. No external GenAI API is required; AI assistance is disclosed in docs/genai_usage.md.
+Tools: Tableau, Python, pandas, NumPy, SQLite, matplotlib, openpyxl, Excel formulas and optional LibreOffice for independent recalculation. No external GenAI API is required; AI assistance is disclosed in docs/genai_usage.md.
 
 ## KPI list
 
@@ -83,7 +96,7 @@ Recruiting is a separate synthetic population. Accepted applications do not equa
 
 ## Files
 
-`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` optional specification and preview; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
+`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` Tableau packaged workbook and dashboard documentation; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
 
 ### Main analysis-ready outputs
 
@@ -122,7 +135,7 @@ SQLite SQL is in `sql/kpi_monthly.sql` and executes automatically against interm
 
 - Summary preview: `dashboard/screenshots/summary_preview.png` when supplied with the delivery.
 - Add your own Excel screenshot after selecting a different month: `[screenshot placeholder]`.
-- Optional Tableau screenshot, only if built: `[screenshot placeholder]`.
+- Tableau dashboard screenshot: `[screenshot placeholder — add an export from the supplied workbook]`.
 
 ## Interview explanation
 
