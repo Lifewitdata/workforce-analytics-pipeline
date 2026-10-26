@@ -1,0 +1,7 @@
+Department,OverTime,records,exits,attrition_share
+Human Resources,No,46,7,0.15217391304347827
+Human Resources,Yes,17,5,0.29411764705882354
+Research & Development,No,690,59,0.08550724637681159
+Research & Development,Yes,271,74,0.2730627306273063
+Sales,No,318,44,0.13836477987421383
+Sales,Yes,128,48,0.375

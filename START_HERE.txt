@@ -1,0 +1,13 @@
+WORKFORCE & RECRUITING ANALYTICS
+Synthetic educational project. No Alteryx required.
+
+1. Open excel/workforce_summary.xlsx to see the finished dashboard.
+2. Change the yellow report-month cell to explore 2025.
+3. Read docs/insights.md for the HR recommendation and evidence.
+4. Open notebooks/01_eda.ipynb in Jupyter or VS Code to review the executed EDA.
+5. To rerun, open a terminal in this folder:
+   python -m pip install -r requirements.txt
+   python src/pipeline.py
+
+All required data is included. Read README.md for details.
+Dates, locations, exit reasons and recruiting records are simulated.

@@ -1,0 +1,13 @@
+{
+  "required_paths_present": true,
+  "legacy_workflow_folder_removed": true,
+  "pre_refactor_kpis_unchanged": true,
+  "baseline_optimized_full_run_outputs_equal": true,
+  "baseline_full_run_seconds": 36.09684306500003,
+  "optimized_full_run_seconds": 35.58709904000011,
+  "full_run_timing_note": "Single smoke-test executions, includes workbook recalculation and seven-repeat aggregation benchmark; not a reliable end-to-end speed comparison. See optimization/benchmark_results.csv for the measured aggregation-stage comparison.",
+  "pipeline_checks_passed": 90,
+  "unit_tests_passed": 5,
+  "executed_notebook_code_cells": 16,
+  "notebook_charts": 3
+}

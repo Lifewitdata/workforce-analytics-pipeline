@@ -1,0 +1,11 @@
+pattern,segment,records,exits,attrition_share
+OverTime,No,1054,110,0.10436432637571158
+OverTime,Yes,416,127,0.30528846153846156
+tenure_band,10+ years,366,38,0.10382513661202186
+tenure_band,1–<3 years,298,86,0.28859060402684567
+tenure_band,3–<5 years,238,39,0.1638655462184874
+tenure_band,5–<10 years,524,58,0.11068702290076336
+tenure_band,<1 year,44,16,0.36363636363636365
+Department,Human Resources,63,12,0.19047619047619047
+Department,Research & Development,961,133,0.1383975026014568
+Department,Sales,446,92,0.2062780269058296

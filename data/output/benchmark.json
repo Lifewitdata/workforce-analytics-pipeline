@@ -1,0 +1,31 @@
+{
+  "baseline": {
+    "median_seconds": 0.04465101699997831,
+    "runs_seconds": [
+      0.04361142600009771,
+      0.045639663999963886,
+      0.04608712699996431,
+      0.04465101699997831,
+      0.04374110000003384,
+      0.04478783300010036,
+      0.04427799799987042
+    ],
+    "logical_steps": 21,
+    "output_bytes": 8920
+  },
+  "optimized": {
+    "median_seconds": 0.004821497999955682,
+    "runs_seconds": [
+      0.004958874000067226,
+      0.004821497999955682,
+      0.00474220899991451,
+      0.004405632000043624,
+      0.004844331999947826,
+      0.004541636999874754,
+      0.005019294000021546
+    ],
+    "logical_steps": 2,
+    "output_bytes": 8920
+  },
+  "scope": "Employee aggregation only, excludes input/output, simulation, recruiting and Excel. Baseline: 11 groupbys + 10 joins. Optimized: column projection + 1 groupby."
+}

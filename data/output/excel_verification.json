@@ -1,0 +1,12 @@
+{
+  "engine": "LibreOffice headless; Microsoft Excel not executed",
+  "formula_error_cells": 0,
+  "selected_month": "2025-12",
+  "selected_month_max_absolute_difference": 2.1316282072803006e-14,
+  "alternate_month": "2025-01",
+  "alternate_month_max_absolute_difference": 2.842170943040401e-14,
+  "missing_employee_lookup": "Not found",
+  "dropdowns_preserved": 2,
+  "conditional_formatting_preserved": true,
+  "chart_preserved": true
+}

@@ -1,0 +1,17 @@
+{
+  "label": "SYNTHETIC EDUCATIONAL DATA \u2014 monthly history and recruiting are simulated.",
+  "seed": 42,
+  "execution_mode": "optimized",
+  "source_sha256": "df7985d643392e2a09fd66a1833d9bb1fc4a6525ffd3934cb61926b4590201e2",
+  "python": "3.12.14",
+  "pandas": "2.2.3",
+  "numpy": "2.3.5",
+  "employee_month_rows": 16131,
+  "employees": 1470,
+  "applications": 2400,
+  "output_groups": 108,
+  "checks_passed": 90,
+  "pipeline_seconds": 35.58709904000011,
+  "runtime_scope": "includes Python pipeline, benchmark, workbook generation and available LibreOffice recalculation; excludes documentation refresh, screenshots and packaging",
+  "finding": "Investigate overtime workload in Research & Development first: 74/271 overtime employees have Attrition=Yes (27.3%)."
+}

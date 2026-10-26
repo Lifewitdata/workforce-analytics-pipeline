@@ -1,0 +1,3 @@
+version,scope,median_seconds,logical_steps,output_bytes,repetitions,outputs_equal
+baseline,"Employee aggregation only, excludes input/output, simulation, recruiting and Excel. Baseline: 11 groupbys + 10 joins. Optimized: column projection + 1 groupby.",0.04465101699997831,21,8920,7,True
+optimized,"Employee aggregation only, excludes input/output, simulation, recruiting and Excel. Baseline: 11 groupbys + 10 joins. Optimized: column projection + 1 groupby.",0.004821497999955682,2,8920,7,True

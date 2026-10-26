@@ -1,5 +1,7 @@
 # Workforce & Recruiting Analytics Pipeline
 
+> **Public repository status:** Employee-level source files, the 12 monthly employee files, `data/output/master_employees.csv`, and `excel/workforce_summary.xlsx` are withheld pending explicit approval to publish the employee data. The completed local project includes these files; this public checkout cannot run end to end until authorized inputs are supplied. Recorded validation and benchmark results refer to the complete local project. Synthetic recruiting data and aggregate results are included.
+
 **SYNTHETIC EDUCATIONAL PROJECT.** Employee upload treated as teaching data; original provenance is unconfirmed. Dates, monthly history, locations, exit reasons and recruiting data are simulated. No real employer impact is claimed.
 
 ## Start here

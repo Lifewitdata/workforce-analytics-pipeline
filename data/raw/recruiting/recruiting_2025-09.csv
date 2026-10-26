@@ -1,0 +1,197 @@
+application_id,applicant_id,Department,JobRole,location,source,apply_date,stage_reached,offer_decision,decision_date,acceptance_date,is_synthetic,screen_date,interview_date,offer_date
+APP00028,P00028,Research & Development,Research Director,Site C,Career site,2025-09-28,Screened,Not offered,,,True,2025-10-06,,
+APP00029,P00029,Sales,Manager,Site A,Career site,2025-09-21,Screened,Not offered,,,True,2025-09-27,,
+APP00052,P00052,Research & Development,Laboratory Technician,Site A,Job board,2025-09-15,Interviewed,Not offered,,,True,2025-09-19,2025-09-28,
+APP00056,P00056,Research & Development,Manufacturing Director,Site A,Job board,2025-09-28,Interviewed,Not offered,,,True,2025-09-29,2025-10-14,
+APP00064,P00064,Research & Development,Manager,Site C,Referral,2025-09-25,Applied,Not offered,,,True,,,
+APP00073,P00073,Research & Development,Laboratory Technician,Site C,Job board,2025-09-02,Applied,Not offered,,,True,,,
+APP00082,P00082,Sales,Manager,Site A,Referral,2025-09-15,Screened,Not offered,,,True,2025-09-21,,
+APP00124,P00124,Sales,Sales Representative,Site C,Agency,2025-09-20,Screened,Not offered,,,True,2025-09-23,,
+APP00143,P00143,Sales,Sales Representative,Site A,Career site,2025-09-10,Accepted,Accepted,2025-10-06,2025-10-06,True,2025-09-13,2025-09-18,2025-09-27
+APP00163,P00163,Sales,Sales Executive,Site B,Job board,2025-09-27,Screened,Not offered,,,True,2025-10-03,,
+APP00188,P00188,Research & Development,Research Director,Site B,Job board,2025-09-18,Applied,Not offered,,,True,,,
+APP00210,P00210,Sales,Sales Representative,Site B,Referral,2025-09-15,Screened,Not offered,,,True,2025-09-21,,
+APP00212,P00212,Research & Development,Manufacturing Director,Site B,Referral,2025-09-16,Applied,Not offered,,,True,,,
+APP00216,P00216,Sales,Manager,Site A,Agency,2025-09-27,Interviewed,Not offered,,,True,2025-10-01,2025-10-12,
+APP00231,P00231,Human Resources,Human Resources,Site A,Referral,2025-09-16,Applied,Not offered,,,True,,,
+APP00252,P00252,Research & Development,Manufacturing Director,Site A,Job board,2025-09-06,Screened,Not offered,,,True,2025-09-09,,
+APP00258,P00258,Sales,Sales Executive,Site C,Referral,2025-09-26,Accepted,Accepted,2025-10-23,2025-10-23,True,2025-09-28,2025-10-12,2025-10-14
+APP00261,P00261,Sales,Sales Executive,Site A,Agency,2025-09-18,Accepted,Accepted,2025-10-08,2025-10-08,True,2025-09-19,2025-09-30,2025-10-06
+APP00262,P00262,Research & Development,Research Director,Site C,Job board,2025-09-03,Screened,Not offered,,,True,2025-09-09,,
+APP00308,P00308,Research & Development,Manager,Site A,Job board,2025-09-19,Applied,Not offered,,,True,,,
+APP00321,P00321,Research & Development,Manufacturing Director,Site B,Agency,2025-09-30,Screened,Not offered,,,True,2025-10-07,,
+APP00325,P00325,Sales,Sales Representative,Site B,Career site,2025-09-29,Applied,Not offered,,,True,,,
+APP00339,P00339,Research & Development,Manager,Site C,Career site,2025-09-30,Screened,Not offered,,,True,2025-10-01,,
+APP00344,P00344,Human Resources,Human Resources,Site C,Referral,2025-09-29,Applied,Not offered,,,True,,,
+APP00345,P00345,Research & Development,Healthcare Representative,Site A,Agency,2025-09-06,Interviewed,Not offered,,,True,2025-09-09,2025-09-24,
+APP00353,P00353,Research & Development,Manufacturing Director,Site A,Career site,2025-09-18,Applied,Not offered,,,True,,,
+APP00361,P00361,Research & Development,Healthcare Representative,Site B,Agency,2025-09-08,Interviewed,Not offered,,,True,2025-09-09,2025-09-22,
+APP00364,P00364,Research & Development,Manager,Site B,Agency,2025-09-19,Screened,Not offered,,,True,2025-09-28,,
+APP00394,P00394,Research & Development,Research Director,Site A,Job board,2025-09-15,Interviewed,Not offered,,,True,2025-09-16,2025-09-24,
+APP00401,P00401,Sales,Manager,Site B,Agency,2025-09-17,Applied,Not offered,,,True,,,
+APP00402,P00402,Sales,Sales Representative,Site C,Referral,2025-09-29,Accepted,Accepted,2025-10-25,2025-10-25,True,2025-10-03,2025-10-12,2025-10-14
+APP00429,P00429,Research & Development,Research Scientist,Site B,Job board,2025-09-02,Screened,Not offered,,,True,2025-09-07,,
+APP00440,P00440,Human Resources,Manager,Site B,Career site,2025-09-17,Accepted,Accepted,2025-10-26,2025-10-26,True,2025-09-23,2025-10-07,2025-10-14
+APP00449,P00449,Sales,Sales Executive,Site A,Job board,2025-09-05,Interviewed,Not offered,,,True,2025-09-10,2025-09-20,
+APP00470,P00470,Research & Development,Research Director,Site B,Agency,2025-09-15,Screened,Not offered,,,True,2025-09-21,,
+APP00478,P00478,Research & Development,Manufacturing Director,Site C,Job board,2025-09-09,Screened,Not offered,,,True,2025-09-12,,
+APP00479,P00479,Research & Development,Manufacturing Director,Site A,Job board,2025-09-23,Screened,Not offered,,,True,2025-09-24,,
+APP00510,P00510,Sales,Sales Executive,Site A,Career site,2025-09-15,Interviewed,Not offered,,,True,2025-09-24,2025-10-01,
+APP00530,P00530,Research & Development,Healthcare Representative,Site C,Referral,2025-09-14,Applied,Not offered,,,True,,,
+APP00534,P00534,Research & Development,Research Scientist,Site B,Agency,2025-09-14,Applied,Not offered,,,True,,,
+APP00549,P00549,Research & Development,Research Scientist,Site B,Agency,2025-09-06,Screened,Not offered,,,True,2025-09-08,,
+APP00589,P00589,Sales,Sales Representative,Site C,Career site,2025-09-06,Interviewed,Not offered,,,True,2025-09-15,2025-09-22,
+APP00604,P00604,Research & Development,Research Director,Site B,Referral,2025-09-10,Interviewed,Not offered,,,True,2025-09-13,2025-09-25,
+APP00627,P00627,Human Resources,Manager,Site B,Agency,2025-09-19,Accepted,Accepted,2025-10-27,2025-10-27,True,2025-09-24,2025-10-04,2025-10-13
+APP00630,P00630,Sales,Sales Executive,Site C,Referral,2025-09-09,Screened,Not offered,,,True,2025-09-16,,
+APP00648,P00648,Sales,Sales Representative,Site C,Referral,2025-09-29,Interviewed,Not offered,,,True,2025-10-06,2025-10-10,
+APP00649,P00649,Human Resources,Manager,Site A,Career site,2025-09-03,Screened,Not offered,,,True,2025-09-08,,
+APP00668,P00668,Research & Development,Manager,Site A,Referral,2025-09-22,Screened,Not offered,,,True,2025-09-24,,
+APP00675,P00675,Research & Development,Research Director,Site A,Job board,2025-09-01,Applied,Not offered,,,True,,,
+APP00690,P00690,Research & Development,Laboratory Technician,Site B,Agency,2025-09-13,Accepted,Accepted,2025-10-05,2025-10-05,True,2025-09-21,2025-09-24,2025-10-04
+APP00699,P00699,Research & Development,Research Director,Site A,Job board,2025-09-08,Screened,Not offered,,,True,2025-09-09,,
+APP00727,P00727,Research & Development,Manufacturing Director,Site B,Career site,2025-09-16,Interviewed,Not offered,,,True,2025-09-21,2025-10-02,
+APP00751,P00751,Human Resources,Manager,Site A,Job board,2025-09-01,Applied,Not offered,,,True,,,
+APP00752,P00752,Research & Development,Laboratory Technician,Site C,Job board,2025-09-20,Screened,Not offered,,,True,2025-09-29,,
+APP00757,P00757,Sales,Manager,Site B,Job board,2025-09-07,Screened,Not offered,,,True,2025-09-12,,
+APP00758,P00758,Human Resources,Human Resources,Site A,Agency,2025-09-30,Applied,Not offered,,,True,,,
+APP00760,P00760,Research & Development,Manufacturing Director,Site C,Referral,2025-09-22,Screened,Not offered,,,True,2025-09-26,,
+APP00781,P00781,Sales,Sales Executive,Site C,Agency,2025-09-18,Interviewed,Not offered,,,True,2025-09-21,2025-09-27,
+APP00784,P00784,Sales,Sales Executive,Site B,Career site,2025-09-13,Screened,Not offered,,,True,2025-09-21,,
+APP00799,P00799,Research & Development,Laboratory Technician,Site B,Career site,2025-09-05,Offered,Declined,2025-09-24,,True,2025-09-13,2025-09-15,2025-09-22
+APP00813,P00813,Human Resources,Human Resources,Site C,Agency,2025-09-28,Accepted,Accepted,2025-11-07,2025-11-07,True,2025-10-05,2025-10-19,2025-10-24
+APP00826,P00826,Research & Development,Manufacturing Director,Site B,Referral,2025-09-22,Interviewed,Not offered,,,True,2025-09-25,2025-10-01,
+APP00884,P00884,Research & Development,Manager,Site C,Career site,2025-09-27,Accepted,Accepted,2025-10-16,2025-10-16,True,2025-10-02,2025-10-05,2025-10-13
+APP00896,P00896,Research & Development,Research Director,Site A,Job board,2025-09-25,Interviewed,Not offered,,,True,2025-10-03,2025-10-07,
+APP00913,P00913,Human Resources,Human Resources,Site B,Job board,2025-09-25,Accepted,Accepted,2025-10-21,2025-10-21,True,2025-10-02,2025-10-16,2025-10-20
+APP00923,P00923,Research & Development,Research Director,Site C,Job board,2025-09-19,Applied,Not offered,,,True,,,
+APP00955,P00955,Sales,Sales Representative,Site A,Career site,2025-09-26,Applied,Not offered,,,True,,,
+APP00959,P00959,Human Resources,Human Resources,Site C,Referral,2025-09-23,Applied,Not offered,,,True,,,
+APP00975,P00975,Human Resources,Manager,Site A,Career site,2025-09-13,Screened,Not offered,,,True,2025-09-16,,
+APP00983,P00983,Research & Development,Manufacturing Director,Site A,Job board,2025-09-14,Applied,Not offered,,,True,,,
+APP00991,P00991,Research & Development,Healthcare Representative,Site B,Agency,2025-09-20,Accepted,Accepted,2025-10-21,2025-10-21,True,2025-09-29,2025-10-14,2025-10-20
+APP01010,P01010,Sales,Sales Representative,Site B,Agency,2025-09-14,Screened,Not offered,,,True,2025-09-21,,
+APP01027,P01027,Research & Development,Laboratory Technician,Site A,Agency,2025-09-10,Screened,Not offered,,,True,2025-09-16,,
+APP01029,P01029,Research & Development,Manager,Site C,Career site,2025-09-10,Interviewed,Not offered,,,True,2025-09-14,2025-09-20,
+APP01048,P01048,Research & Development,Research Director,Site C,Referral,2025-09-08,Screened,Not offered,,,True,2025-09-15,,
+APP01069,P01069,Research & Development,Manufacturing Director,Site B,Job board,2025-09-27,Screened,Not offered,,,True,2025-09-29,,
+APP01075,P01075,Human Resources,Human Resources,Site A,Agency,2025-09-18,Screened,Not offered,,,True,2025-09-26,,
+APP01105,P01105,Human Resources,Manager,Site C,Referral,2025-09-09,Interviewed,Not offered,,,True,2025-09-17,2025-09-29,
+APP01125,P01125,Research & Development,Manager,Site C,Job board,2025-09-23,Accepted,Accepted,2025-10-15,2025-10-15,True,2025-09-28,2025-10-10,2025-10-11
+APP01130,P01130,Sales,Sales Representative,Site B,Agency,2025-09-27,Offered,Declined,2025-10-18,,True,2025-09-30,2025-10-03,2025-10-11
+APP01135,P01135,Research & Development,Manufacturing Director,Site C,Job board,2025-09-26,Accepted,Accepted,2025-11-02,2025-11-02,True,2025-10-06,2025-10-14,2025-10-21
+APP01138,P01138,Sales,Manager,Site B,Career site,2025-09-15,Offered,Declined,2025-10-03,,True,2025-09-18,2025-09-24,2025-09-27
+APP01150,P01150,Research & Development,Laboratory Technician,Site A,Referral,2025-09-19,Accepted,Accepted,2025-10-08,2025-10-08,True,2025-09-20,2025-09-22,2025-09-25
+APP01165,P01165,Research & Development,Research Scientist,Site B,Agency,2025-09-12,Applied,Not offered,,,True,,,
+APP01171,P01171,Research & Development,Research Scientist,Site C,Agency,2025-09-24,Accepted,Accepted,2025-10-24,2025-10-24,True,2025-09-28,2025-10-07,2025-10-13
+APP01180,P01180,Human Resources,Human Resources,Site A,Career site,2025-09-01,Applied,Not offered,,,True,,,
+APP01220,P01220,Research & Development,Laboratory Technician,Site A,Referral,2025-09-01,Applied,Not offered,,,True,,,
+APP01234,P01234,Sales,Sales Executive,Site A,Career site,2025-09-09,Interviewed,Not offered,,,True,2025-09-15,2025-09-27,
+APP01243,P01243,Research & Development,Healthcare Representative,Site B,Agency,2025-09-10,Screened,Not offered,,,True,2025-09-17,,
+APP01248,P01248,Research & Development,Manufacturing Director,Site B,Referral,2025-09-08,Applied,Not offered,,,True,,,
+APP01252,P01252,Human Resources,Human Resources,Site C,Agency,2025-09-24,Interviewed,Not offered,,,True,2025-10-03,2025-10-13,
+APP01261,P01261,Human Resources,Human Resources,Site C,Job board,2025-09-08,Applied,Not offered,,,True,,,
+APP01270,P01270,Research & Development,Research Scientist,Site B,Agency,2025-09-19,Interviewed,Not offered,,,True,2025-09-27,2025-10-05,
+APP01291,P01291,Research & Development,Laboratory Technician,Site A,Job board,2025-09-11,Screened,Not offered,,,True,2025-09-19,,
+APP01300,P01300,Human Resources,Human Resources,Site B,Career site,2025-09-11,Applied,Not offered,,,True,,,
+APP01324,P01324,Sales,Sales Executive,Site B,Agency,2025-09-19,Accepted,Accepted,2025-10-07,2025-10-07,True,2025-09-26,2025-09-28,2025-09-29
+APP01329,P01329,Research & Development,Healthcare Representative,Site C,Referral,2025-09-12,Applied,Not offered,,,True,,,
+APP01344,P01344,Research & Development,Manager,Site B,Agency,2025-09-25,Interviewed,Not offered,,,True,2025-10-04,2025-10-16,
+APP01349,P01349,Sales,Sales Representative,Site A,Agency,2025-09-07,Screened,Not offered,,,True,2025-09-16,,
+APP01359,P01359,Research & Development,Research Director,Site A,Agency,2025-09-14,Accepted,Accepted,2025-10-11,2025-10-11,True,2025-09-22,2025-10-01,2025-10-03
+APP01361,P01361,Research & Development,Manager,Site B,Career site,2025-09-12,Applied,Not offered,,,True,,,
+APP01363,P01363,Research & Development,Healthcare Representative,Site B,Career site,2025-09-14,Accepted,Accepted,2025-10-10,2025-10-10,True,2025-09-17,2025-09-22,2025-09-29
+APP01371,P01371,Human Resources,Manager,Site C,Career site,2025-09-05,Screened,Not offered,,,True,2025-09-10,,
+APP01375,P01375,Research & Development,Research Director,Site B,Job board,2025-09-19,Screened,Not offered,,,True,2025-09-27,,
+APP01395,P01395,Research & Development,Laboratory Technician,Site C,Career site,2025-09-28,Screened,Not offered,,,True,2025-10-02,,
+APP01398,P01398,Sales,Manager,Site A,Agency,2025-09-27,Accepted,Accepted,2025-10-13,2025-10-13,True,2025-10-02,2025-10-09,2025-10-11
+APP01410,P01410,Human Resources,Manager,Site C,Career site,2025-09-20,Accepted,Accepted,2025-10-08,2025-10-08,True,2025-09-23,2025-10-01,2025-10-03
+APP01422,P01422,Research & Development,Healthcare Representative,Site C,Agency,2025-09-14,Interviewed,Not offered,,,True,2025-09-16,2025-09-29,
+APP01433,P01433,Research & Development,Research Scientist,Site C,Job board,2025-09-24,Applied,Not offered,,,True,,,
+APP01436,P01436,Sales,Sales Representative,Site A,Referral,2025-09-15,Screened,Not offered,,,True,2025-09-22,,
+APP01445,P01445,Research & Development,Research Scientist,Site A,Agency,2025-09-28,Screened,Not offered,,,True,2025-10-03,,
+APP01446,P01446,Sales,Manager,Site A,Referral,2025-09-30,Interviewed,Not offered,,,True,2025-10-06,2025-10-15,
+APP01451,P01451,Research & Development,Research Director,Site B,Referral,2025-09-26,Interviewed,Not offered,,,True,2025-09-27,2025-10-08,
+APP01464,P01464,Research & Development,Manufacturing Director,Site B,Agency,2025-09-13,Screened,Not offered,,,True,2025-09-17,,
+APP01470,P01470,Sales,Manager,Site B,Job board,2025-09-15,Accepted,Accepted,2025-10-16,2025-10-16,True,2025-09-20,2025-10-01,2025-10-08
+APP01493,P01493,Sales,Sales Representative,Site A,Agency,2025-09-04,Screened,Not offered,,,True,2025-09-10,,
+APP01497,P01497,Research & Development,Research Scientist,Site A,Referral,2025-09-07,Screened,Not offered,,,True,2025-09-14,,
+APP01535,P01535,Sales,Sales Executive,Site B,Referral,2025-09-26,Accepted,Accepted,2025-11-03,2025-11-03,True,2025-10-06,2025-10-14,2025-10-24
+APP01542,P01542,Sales,Sales Executive,Site C,Referral,2025-09-24,Screened,Not offered,,,True,2025-09-26,,
+APP01545,P01545,Human Resources,Manager,Site A,Job board,2025-09-13,Interviewed,Not offered,,,True,2025-09-19,2025-09-27,
+APP01547,P01547,Research & Development,Research Director,Site B,Agency,2025-09-17,Offered,Declined,2025-10-13,,True,2025-09-18,2025-10-01,2025-10-06
+APP01560,P01560,Sales,Sales Executive,Site B,Referral,2025-09-16,Interviewed,Not offered,,,True,2025-09-26,2025-10-09,
+APP01564,P01564,Research & Development,Research Director,Site A,Job board,2025-09-13,Applied,Not offered,,,True,,,
+APP01585,P01585,Human Resources,Human Resources,Site C,Job board,2025-09-22,Screened,Not offered,,,True,2025-09-29,,
+APP01594,P01594,Research & Development,Research Director,Site A,Career site,2025-09-30,Screened,Not offered,,,True,2025-10-06,,
+APP01611,P01611,Human Resources,Human Resources,Site C,Agency,2025-09-29,Offered,Declined,2025-10-12,,True,2025-09-30,2025-10-09,2025-10-10
+APP01616,P01616,Human Resources,Manager,Site A,Job board,2025-09-05,Interviewed,Not offered,,,True,2025-09-07,2025-09-20,
+APP01628,P01628,Human Resources,Manager,Site A,Job board,2025-09-29,Screened,Not offered,,,True,2025-10-09,,
+APP01641,P01641,Research & Development,Laboratory Technician,Site B,Job board,2025-09-17,Applied,Not offered,,,True,,,
+APP01646,P01646,Sales,Sales Representative,Site B,Agency,2025-09-01,Screened,Not offered,,,True,2025-09-11,,
+APP01665,P01665,Sales,Manager,Site A,Agency,2025-09-11,Applied,Not offered,,,True,,,
+APP01676,P01676,Research & Development,Healthcare Representative,Site C,Agency,2025-09-16,Screened,Not offered,,,True,2025-09-17,,
+APP01679,P01679,Research & Development,Research Scientist,Site B,Agency,2025-09-13,Screened,Not offered,,,True,2025-09-14,,
+APP01689,P01689,Research & Development,Laboratory Technician,Site C,Career site,2025-09-05,Accepted,Accepted,2025-10-07,2025-10-07,True,2025-09-12,2025-09-24,2025-10-03
+APP01697,P01697,Research & Development,Healthcare Representative,Site C,Agency,2025-09-01,Screened,Not offered,,,True,2025-09-03,,
+APP01708,P01708,Research & Development,Manager,Site C,Referral,2025-09-21,Interviewed,Not offered,,,True,2025-09-26,2025-10-02,
+APP01712,P01712,Human Resources,Manager,Site C,Career site,2025-09-12,Screened,Not offered,,,True,2025-09-15,,
+APP01727,P01727,Sales,Manager,Site C,Career site,2025-09-01,Applied,Not offered,,,True,,,
+APP01732,P01732,Human Resources,Human Resources,Site A,Job board,2025-09-19,Interviewed,Not offered,,,True,2025-09-27,2025-10-10,
+APP01742,P01742,Human Resources,Manager,Site A,Referral,2025-09-22,Interviewed,Not offered,,,True,2025-09-27,2025-10-07,
+APP01752,P01752,Research & Development,Laboratory Technician,Site C,Agency,2025-09-28,Screened,Not offered,,,True,2025-10-07,,
+APP01755,P01755,Research & Development,Laboratory Technician,Site B,Agency,2025-09-17,Screened,Not offered,,,True,2025-09-21,,
+APP01780,P01780,Sales,Sales Representative,Site C,Agency,2025-09-06,Offered,Declined,2025-10-08,,True,2025-09-12,2025-09-25,2025-10-02
+APP01790,P01790,Research & Development,Research Director,Site C,Career site,2025-09-14,Interviewed,Not offered,,,True,2025-09-16,2025-09-30,
+APP01792,P01792,Human Resources,Manager,Site A,Job board,2025-09-05,Screened,Not offered,,,True,2025-09-10,,
+APP01793,P01793,Sales,Sales Executive,Site C,Agency,2025-09-12,Accepted,Accepted,2025-10-23,2025-10-23,True,2025-09-19,2025-10-01,2025-10-10
+APP01813,P01813,Human Resources,Human Resources,Site C,Referral,2025-09-01,Offered,Declined,2025-09-28,,True,2025-09-05,2025-09-08,2025-09-18
+APP01830,P01830,Research & Development,Manager,Site A,Career site,2025-09-12,Screened,Not offered,,,True,2025-09-21,,
+APP01846,P01846,Research & Development,Research Director,Site C,Agency,2025-09-15,Accepted,Accepted,2025-10-14,2025-10-14,True,2025-09-20,2025-09-26,2025-10-04
+APP01847,P01847,Sales,Manager,Site A,Career site,2025-09-06,Applied,Not offered,,,True,,,
+APP01861,P01861,Research & Development,Healthcare Representative,Site A,Career site,2025-09-08,Offered,Declined,2025-09-29,,True,2025-09-12,2025-09-17,2025-09-18
+APP01863,P01863,Human Resources,Manager,Site B,Agency,2025-09-13,Screened,Not offered,,,True,2025-09-21,,
+APP01875,P01875,Research & Development,Manager,Site B,Referral,2025-09-11,Interviewed,Not offered,,,True,2025-09-18,2025-09-24,
+APP01877,P01877,Research & Development,Healthcare Representative,Site A,Job board,2025-09-15,Applied,Not offered,,,True,,,
+APP01882,P01882,Sales,Sales Executive,Site B,Career site,2025-09-07,Screened,Not offered,,,True,2025-09-11,,
+APP01892,P01892,Research & Development,Healthcare Representative,Site A,Agency,2025-09-02,Accepted,Accepted,2025-09-20,2025-09-20,True,2025-09-03,2025-09-12,2025-09-13
+APP01893,P01893,Research & Development,Healthcare Representative,Site A,Agency,2025-09-17,Applied,Not offered,,,True,,,
+APP01894,P01894,Research & Development,Healthcare Representative,Site B,Referral,2025-09-23,Screened,Not offered,,,True,2025-09-24,,
+APP01905,P01905,Sales,Sales Executive,Site C,Career site,2025-09-30,Interviewed,Not offered,,,True,2025-10-07,2025-10-12,
+APP01912,P01912,Sales,Manager,Site B,Referral,2025-09-13,Interviewed,Not offered,,,True,2025-09-18,2025-10-02,
+APP01917,P01917,Research & Development,Healthcare Representative,Site C,Job board,2025-09-02,Accepted,Accepted,2025-10-03,2025-10-03,True,2025-09-06,2025-09-21,2025-09-24
+APP01924,P01924,Sales,Sales Executive,Site C,Job board,2025-09-02,Accepted,Accepted,2025-09-24,2025-09-24,True,2025-09-06,2025-09-14,2025-09-19
+APP01925,P01925,Human Resources,Human Resources,Site C,Career site,2025-09-14,Screened,Not offered,,,True,2025-09-20,,
+APP01948,P01948,Sales,Sales Representative,Site B,Job board,2025-09-01,Applied,Not offered,,,True,,,
+APP01949,P01949,Research & Development,Research Director,Site C,Agency,2025-09-28,Screened,Not offered,,,True,2025-10-08,,
+APP01951,P01951,Sales,Manager,Site B,Agency,2025-09-19,Applied,Not offered,,,True,,,
+APP01958,P01958,Research & Development,Manager,Site A,Referral,2025-09-20,Applied,Not offered,,,True,,,
+APP01988,P01988,Sales,Manager,Site C,Agency,2025-09-23,Screened,Not offered,,,True,2025-09-28,,
+APP01993,P01993,Research & Development,Manager,Site B,Job board,2025-09-20,Interviewed,Not offered,,,True,2025-09-25,2025-09-28,
+APP02005,P02005,Research & Development,Healthcare Representative,Site B,Job board,2025-09-03,Screened,Not offered,,,True,2025-09-04,,
+APP02018,P02018,Research & Development,Healthcare Representative,Site C,Career site,2025-09-19,Interviewed,Not offered,,,True,2025-09-26,2025-09-28,
+APP02026,P02026,Research & Development,Laboratory Technician,Site B,Referral,2025-09-23,Offered,Declined,2025-10-31,,True,2025-10-02,2025-10-14,2025-10-21
+APP02038,P02038,Research & Development,Manager,Site C,Agency,2025-09-07,Applied,Not offered,,,True,,,
+APP02047,P02047,Research & Development,Healthcare Representative,Site A,Agency,2025-09-15,Accepted,Accepted,2025-10-25,2025-10-25,True,2025-09-25,2025-10-09,2025-10-13
+APP02050,P02050,Research & Development,Laboratory Technician,Site B,Career site,2025-09-15,Screened,Not offered,,,True,2025-09-18,,
+APP02059,P02059,Sales,Manager,Site B,Agency,2025-09-30,Accepted,Accepted,2025-10-24,2025-10-24,True,2025-10-02,2025-10-08,2025-10-18
+APP02061,P02061,Sales,Sales Executive,Site B,Career site,2025-09-28,Accepted,Accepted,2025-10-21,2025-10-21,True,2025-10-05,2025-10-14,2025-10-20
+APP02092,P02092,Research & Development,Healthcare Representative,Site A,Career site,2025-09-02,Accepted,Accepted,2025-10-03,2025-10-03,True,2025-09-05,2025-09-18,2025-09-28
+APP02098,P02098,Research & Development,Manager,Site C,Referral,2025-09-19,Applied,Not offered,,,True,,,
+APP02118,P02118,Sales,Sales Executive,Site C,Referral,2025-09-28,Screened,Not offered,,,True,2025-10-05,,
+APP02122,P02122,Research & Development,Laboratory Technician,Site A,Job board,2025-09-23,Accepted,Accepted,2025-10-30,2025-10-30,True,2025-09-30,2025-10-09,2025-10-19
+APP02126,P02126,Research & Development,Manager,Site A,Job board,2025-09-16,Applied,Not offered,,,True,,,
+APP02144,P02144,Research & Development,Manufacturing Director,Site C,Referral,2025-09-10,Applied,Not offered,,,True,,,
+APP02162,P02162,Research & Development,Laboratory Technician,Site A,Job board,2025-09-23,Screened,Not offered,,,True,2025-09-24,,
+APP02182,P02182,Sales,Sales Executive,Site A,Referral,2025-09-23,Interviewed,Not offered,,,True,2025-10-01,2025-10-09,
+APP02191,P02191,Research & Development,Manufacturing Director,Site C,Job board,2025-09-01,Screened,Not offered,,,True,2025-09-03,,
+APP02221,P02221,Research & Development,Research Scientist,Site C,Job board,2025-09-27,Interviewed,Not offered,,,True,2025-10-04,2025-10-09,
+APP02248,P02248,Research & Development,Laboratory Technician,Site A,Job board,2025-09-19,Screened,Not offered,,,True,2025-09-26,,
+APP02260,P02260,Human Resources,Manager,Site B,Job board,2025-09-16,Screened,Not offered,,,True,2025-09-23,,
+APP02279,P02279,Research & Development,Manager,Site C,Job board,2025-09-02,Screened,Not offered,,,True,2025-09-03,,
+APP02296,P02296,Research & Development,Research Director,Site C,Career site,2025-09-14,Interviewed,Not offered,,,True,2025-09-18,2025-09-29,
+APP02298,P02298,Human Resources,Manager,Site A,Referral,2025-09-05,Applied,Not offered,,,True,,,
+APP02313,P02313,Sales,Sales Executive,Site C,Job board,2025-09-09,Interviewed,Not offered,,,True,2025-09-15,2025-09-24,
+APP02341,P02341,Research & Development,Manager,Site C,Agency,2025-09-21,Applied,Not offered,,,True,,,
+APP02347,P02347,Sales,Sales Executive,Site C,Job board,2025-09-09,Accepted,Accepted,2025-10-03,2025-10-03,True,2025-09-10,2025-09-19,2025-09-29
+APP02365,P02365,Sales,Manager,Site B,Career site,2025-09-14,Screened,Not offered,,,True,2025-09-21,,
