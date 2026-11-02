@@ -6,6 +6,7 @@ seasonal-naive baseline and queueing approximation; they are planning signals, n
 from __future__ import annotations
 import argparse
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import numpy as np
 import pandas as pd
 
@@ -133,6 +134,9 @@ def validate_source_contract(chats, agents, transfers, qa, training):
         if not set(pd.to_numeric(chats[col],errors="coerce").dropna().unique()) <= {0,1}: raise ValueError(f"chat {col} must be binary")
     for col in ["first_response_minutes","handle_minutes","queue_wait_minutes"]:
         if pd.to_numeric(chats[col],errors="coerce").isna().any() or (pd.to_numeric(chats[col])<0).any(): raise ValueError(f"chat {col} must be numeric and non-negative")
+    try:
+        for tz in set(chats.time_zone)|set(agents.time_zone)|set(transfers.time_zone): ZoneInfo(str(tz))
+    except (ZoneInfoNotFoundError, TypeError): raise ValueError("Every time_zone must be a valid IANA timezone")
     if set(chats.agent_id)-set(agents.agent_id): raise ValueError("chat agent_id is not present in the base roster")
     if set(transfers.agent_id)-set(agents.agent_id): raise ValueError("assignment agent_id is not present in the base roster")
     if set(qa.interaction_id)-set(chats.interaction_id): raise ValueError("QA interaction_id does not resolve to chat source")
@@ -235,7 +239,9 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     daily.to_csv(OUT/"daily_service_commercial_risk.csv",index=False)
     # Daily tracker, weekly capacity brief, monthly exec summary.
     tracker=daily.groupby(["date","region"],as_index=False).agg(contacts=("contacts","sum"),avg_response_minutes=("avg_response_minutes","mean"),
-      conversion_rate=("conversion_rate","mean"),high_risk_segments=("risk_level",lambda s:int((s=="HIGH").sum())),uncovered_shift_hours=("uncovered_shift_hours","sum"))
+      conversion_rate=("conversion_rate","mean"),high_risk_segments=("risk_level",lambda s:int((s=="HIGH").sum())))
+    coverage=shifts.groupby(["date","region"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())*8))
+    tracker=tracker.merge(coverage,on=["date","region"],how="left").fillna({"uncovered_shift_hours":0})
     tracker.to_csv(OUT/"daily_tracker.csv",index=False)
     weekly=shifts.assign(week=pd.to_datetime(shifts.date).dt.to_period("W").astype(str)).groupby(["week","region","language","team","channel","time_zone"],as_index=False).agg(required_agent_shifts=("required_agents","sum"),allocated_agent_shifts=("allocated_agents","sum"),coverage_gap_shifts=("coverage_gap",lambda s:int((s>0).sum())),peak_gap=("coverage_gap","max"))
     weekly.to_csv(OUT/"weekly_capacity_brief.csv",index=False)
