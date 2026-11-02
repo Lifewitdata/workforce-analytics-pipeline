@@ -85,7 +85,7 @@ def make_demo(days: int = 56) -> None:
                                 "escalated":int(rng.random()<(.16 if team=="Technical Support" else .07)), "is_synthetic":True})
                             if resolved:
                                 qa.append({"interaction_id":f"CH{chat_id:07d}","qa_score":round(float(np.clip(rng.normal(88,8),50,100)),1),
-                                           "training_flag":int(rng.random()<.09),"reviewed":int(rng.random()<.72),"is_synthetic":True})
+                                           "reviewed":int(rng.random()<.72),"is_synthetic":True})
                             chat_id+=1
     pd.DataFrame(chats).to_csv(RAW/"chat_interactions.csv",index=False)
     pd.DataFrame(qa).to_csv(RAW/"qa_training.csv",index=False)
@@ -110,7 +110,7 @@ def apply_effective_assignments(agents: pd.DataFrame, assignments: pd.DataFrame,
 CHAT_COLUMNS=["interaction_id","created_at","region","language","channel","market","team","time_zone","agent_id","offered","resolved","first_response_minutes","handle_minutes","converted","queue_wait_minutes","reason","escalated"]
 AGENT_COLUMNS=["agent_id","team","home_region","home_language","time_zone","contract_hours_week","employment_status"]
 ASSIGNMENT_COLUMNS=["agent_id","effective_from","effective_to","region","language","channel","team","time_zone"]
-QA_COLUMNS=["interaction_id","qa_score","training_flag","reviewed"]
+QA_COLUMNS=["interaction_id","qa_score","reviewed"]
 TRAINING_COLUMNS=["training_event_id","agent_id","training_date","training_minutes","module","completed"]
 
 
@@ -123,7 +123,9 @@ def validate_source_contract(chats, agents, transfers, qa, training):
         if missing: raise ValueError(f"{name} source missing required columns: {missing}")
     if chats.interaction_id.isna().any() or chats.interaction_id.duplicated().any(): raise ValueError("chat interaction_id must be non-null and unique")
     if agents.agent_id.isna().any() or agents.agent_id.duplicated().any(): raise ValueError("agent_id must be non-null and unique in base roster")
-    if not set(chats.region.dropna()) <= set(REGIONS): raise ValueError("chat region must be AMER, EMEA or APAC")
+    if chats.region.isna().any() or not chats.region.isin(REGIONS).all(): raise ValueError("chat region must be populated and use AMER, EMEA or APAC")
+    if not pd.api.types.is_datetime64_any_dtype(chats.created_at): chats["created_at"]=pd.to_datetime(chats.created_at,errors="coerce")
+    if chats.created_at.isna().any(): raise ValueError("chat created_at must be a valid local timestamp")
     for col in ["language","channel","market","team","time_zone","reason","agent_id"]:
         if chats[col].isna().any() or chats[col].astype(str).str.strip().eq("").any(): raise ValueError(f"chat {col} cannot be blank")
     if not set(chats.channel.dropna()) <= set(CHANNELS): raise ValueError("chat channel outside approved domain")
@@ -135,6 +137,15 @@ def validate_source_contract(chats, agents, transfers, qa, training):
     if set(transfers.agent_id)-set(agents.agent_id): raise ValueError("assignment agent_id is not present in the base roster")
     if set(qa.interaction_id)-set(chats.interaction_id): raise ValueError("QA interaction_id does not resolve to chat source")
     if set(training.agent_id)-set(agents.agent_id): raise ValueError("training agent_id does not resolve to base roster")
+    if qa.interaction_id.isna().any() or qa.interaction_id.duplicated().any(): raise ValueError("QA interaction_id must be non-null and unique")
+    if training.training_event_id.isna().any() or training.training_event_id.duplicated().any(): raise ValueError("training_event_id must be non-null and unique")
+    if pd.to_numeric(qa.qa_score,errors="coerce").isna().any() or not pd.to_numeric(qa.qa_score).between(0,100).all(): raise ValueError("QA scores must be numeric in [0,100]")
+    if pd.to_numeric(training.training_minutes,errors="coerce").isna().any() or (pd.to_numeric(training.training_minutes)<=0).any(): raise ValueError("training_minutes must be positive")
+    if not set(pd.to_numeric(training.completed,errors="coerce").dropna().unique()) <= {0,1}: raise ValueError("training completed must be binary")
+    for col in ["region","language","channel","team","time_zone"]:
+        if transfers[col].isna().any() or transfers[col].astype(str).str.strip().eq("").any(): raise ValueError(f"assignment {col} cannot be blank")
+    for col in ["home_region","home_language","team","time_zone"]:
+        if agents[col].isna().any() or agents[col].astype(str).str.strip().eq("").any(): raise ValueError(f"agent roster {col} cannot be blank")
     if transfers.effective_from.isna().any(): raise ValueError("assignment effective_from is required")
     if (pd.to_numeric(agents.contract_hours_week,errors="coerce")<=0).any(): raise ValueError("contract_hours_week must be positive")
     intervals=transfers.copy(); intervals["effective_from"]=pd.to_datetime(intervals.effective_from,errors="coerce"); intervals["effective_to"]=pd.to_datetime(intervals.effective_to,errors="coerce")
