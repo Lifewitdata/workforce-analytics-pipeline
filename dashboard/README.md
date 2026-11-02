@@ -26,6 +26,10 @@ Controls include the reporting month, an illustrative attrition threshold, and d
 
 Layout: 1400 × 1600. Scroll vertically to reach the recruiting table.
 
+## Operations analytics (separate model)
+
+The operational contact-centre dataset and local interactive dashboard are documented in [Operations Tableau build guide](OPERATIONS_TABLEAU_BUILD.md). Run `python -m ops.build_operations --generate-demo` and then `streamlit run dashboard/operations_app.py`. These outputs are separate from this monthly HR/recruiting workbook.
+
 ## Review in Tableau
 
 1. Open the workbook and check that labels, cards and table values are visible.
@@ -54,6 +58,10 @@ The reference output is [kpi_monthly.csv](../data/output/kpi_monthly.csv), at mo
 Compute overall rates from summed numerators and denominators. Do not sum headcount across months or average department percentages. Time to hire ends at offer acceptance. Application cohorts and offer decisions have different time bases, so the summary is not a complete sequential recruiting funnel. Undefined ratios should remain null.
 
 The dashboard describes simulated monthly patterns. It cannot establish why employees leave or demonstrate that an intervention reduces attrition.
+
+## Screenshots and publishing status
+
+No genuine Tableau screenshot is committed as of this revision. Export screenshots from Tableau Desktop after opening and validating the packaged workbook. The Tableau Public URL above is a profile link, not a direct workbook link.
 
 ## Verification scope
 
