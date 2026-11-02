@@ -41,6 +41,7 @@ See the complete schemas in [the data contract](docs/operations_data_contract.md
 | `qa_training_split.csv` | Separate QA review outcomes and agent training sessions by team |
 | `reason_escalation_deep_dive.csv` | Contact reason and escalation analysis |
 | `data_quality_checks.csv` | Executed contract assertions |
+| `refresh_manifest.json` | Run ID, provenance, watermarks, row/null counts, checks and configuration |
 
 ## Model and limitations
 
