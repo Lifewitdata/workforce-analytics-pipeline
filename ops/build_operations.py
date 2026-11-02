@@ -163,8 +163,9 @@ def validate_source_contract(chats, agents, transfers, qa, training):
     if pd.to_datetime(training.training_date,errors="coerce").isna().any(): raise ValueError("training_date must be a valid date")
     intervals=transfers.copy(); intervals["effective_from"]=pd.to_datetime(intervals.effective_from,errors="coerce"); intervals["effective_to"]=pd.to_datetime(intervals.effective_to,errors="coerce")
     if intervals.effective_from.isna().any(): raise ValueError("assignment effective_from must be a valid date")
-    raw_end=transfers.effective_to.astype(str).str.strip()
-    if (raw_end.ne("") & intervals.effective_to.isna()).any(): raise ValueError("assignment effective_to must be blank or a valid date")
+    raw_end=transfers.effective_to
+    has_nonblank_end=raw_end.notna() & raw_end.astype(str).str.strip().ne("")
+    if (has_nonblank_end & intervals.effective_to.isna()).any(): raise ValueError("assignment effective_to must be blank or a valid date")
     for _, group in intervals.groupby("agent_id"):
         group=group.sort_values("effective_from").reset_index(drop=True)
         for i in range(1,len(group)):
