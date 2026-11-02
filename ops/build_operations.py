@@ -5,6 +5,9 @@ seasonal-naive baseline and queueing approximation; they are planning signals, n
 """
 from __future__ import annotations
 import argparse
+import json
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import numpy as np
@@ -190,6 +193,14 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     if "is_synthetic" not in chats: chats["is_synthetic"]=False
     if chats.is_synthetic.nunique(dropna=False)>1: raise ValueError("Do not mix synthetic and production chat rows in one refresh")
     source_is_synthetic=bool(chats.is_synthetic.all())
+    source_chat_rows=len(chats)
+    null_counts={
+        "chat":{c:int(chats[c].isna().sum()) for c in CHAT_COLUMNS},
+        "agents":{c:int(agents[c].isna().sum()) for c in AGENT_COLUMNS},
+        "assignments":{c:int(transfers[c].isna().sum()) for c in ASSIGNMENT_COLUMNS},
+        "qa":{c:int(qa[c].isna().sum()) for c in QA_COLUMNS},
+        "training":{c:int(training_source[c].isna().sum()) for c in TRAINING_COLUMNS},
+    }
     OUT.mkdir(parents=True,exist_ok=True)
     chats=chats[(chats.created_at.dt.date>=pd.Timestamp(start).date())&(chats.created_at.dt.date<=pd.Timestamp(end).date())].copy()
     if chats.empty: raise ValueError("No chat interactions in requested reporting window")
@@ -333,9 +344,22 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     add("assignment intervals do not overlap",overlap_ok,"effective intervals use [from,to) semantics")
     add("forecast nonnegative",bool(forecast.forecast_contacts_per_hour.ge(0).all()),"forecast >= 0")
     add("capacity allocation bounded",bool((shifts.allocated_agents<=shifts.available_agents).all()),"allocated <= available")
+    add("synthetic provenance is explicit",bool(chats.is_synthetic.nunique(dropna=False)==1),"single provenance flag per run")
     pd.DataFrame(dq).to_csv(OUT/"data_quality_checks.csv",index=False)
     if not all(x["passed"] for x in dq): raise ValueError("Operational data-quality checks failed")
-    return {"chat_rows":len(chats),"hourly_segments":len(hourly),"forecast_rows":len(forecast),"shift_rows":len(shifts),"risk_rows":len(daily),"checks":len(dq)}
+    output_rows={"hourly":len(hourly),"forecast":len(forecast),"shifts":len(shifts),"daily_risk":len(daily),"daily_tracker":len(tracker),
+        "weekly_capacity":len(weekly),"monthly_executive":len(monthly),"agent_productivity":len(prod),"team_productivity":len(team),
+        "qa_training":len(qa_training),"reason_escalation":len(reason_summary)}
+    watermarks={f"{region}|{tz}":str(value) for (region,tz),value in chats.groupby(["region","time_zone"]).created_at.max().items()}
+    manifest={"run_id":uuid.uuid4().hex,"refreshed_at_utc":datetime.now(timezone.utc).isoformat(),
+        "source_mode":"synthetic" if source_is_synthetic else "validated_csv","is_synthetic":source_is_synthetic,
+        "requested_window":{"start":start,"end":end},"actual_window":{"start":str(chats.created_at.min()),"end":str(chats.created_at.max())},
+        "latest_local_timestamp_by_region_timezone":watermarks,
+        "input_rows":{"chat_source_total":source_chat_rows,"chat_in_window":len(chats),"agents":len(agents),"assignments":len(transfers),"qa_reviews":len(qa),"training_events":len(training_source)},
+        "input_null_counts":null_counts,"quarantined_rows":0,"quarantine_policy":"fail-fast; invalid source input aborts before mart promotion",
+        "output_rows":output_rows,"checks_passed":len(dq),"checks_failed":0,"model":{"seed":SEED,"forecast":"weekday-hour seasonal baseline; 65% full-window profile + 35% recent profile","planning_interval_minutes":30,"occupancy":0.82}}
+    (OUT/"refresh_manifest.json").write_text(json.dumps(manifest,indent=2),encoding="utf-8")
+    return {"chat_rows":len(chats),"hourly_segments":len(hourly),"forecast_rows":len(forecast),"shift_rows":len(shifts),"risk_rows":len(daily),"checks":len(dq),"run_id":manifest["run_id"]}
 
 if __name__=="__main__":
     p=argparse.ArgumentParser(); p.add_argument("--generate-demo",action="store_true"); p.add_argument("--start",default="2026-08-01"); p.add_argument("--end",default="2026-09-25")
