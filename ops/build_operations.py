@@ -195,9 +195,13 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     chats["weekday"]=chats.created_at.dt.dayofweek
     hist=chats.groupby(["region","language","channel","team","time_zone","weekday","hour"],as_index=False).agg(actual_contacts=("interaction_id","count"))
     recent_cut=chats.created_at.max()-pd.Timedelta(days=14)
-    recent=chats[chats.created_at>=recent_cut].groupby(["region","language","channel","team","time_zone","weekday","hour"]).size().rename("recent_contacts").reset_index()
-    hist=hist.merge(recent,on=["region","language","channel","team","time_zone","weekday","hour"],how="left").fillna({"recent_contacts":0})
-    hist["forecast_contacts_per_hour"]=(0.65*hist.actual_contacts/max(1,chats.date.nunique())+0.35*hist.recent_contacts/max(1,(chats.created_at.max().normalize()-recent_cut.normalize()).days+1))
+    recent_chats=chats[chats.created_at>=recent_cut]
+    recent=recent_chats.groupby(["region","language","channel","team","time_zone","weekday","hour"]).size().rename("recent_contacts").reset_index()
+    full_days=chats[["date","weekday"]].drop_duplicates().groupby("weekday").size().rename("full_days").reset_index()
+    recent_days=recent_chats[["date","weekday"]].drop_duplicates().groupby("weekday").size().rename("recent_days").reset_index()
+    hist=hist.merge(recent,on=["region","language","channel","team","time_zone","weekday","hour"],how="left")
+    hist=hist.merge(full_days,on="weekday",how="left").merge(recent_days,on="weekday",how="left").fillna({"recent_contacts":0,"recent_days":1})
+    hist["forecast_contacts_per_hour"]=(0.65*hist.actual_contacts/hist.full_days.clip(lower=1)+0.35*hist.recent_contacts/hist.recent_days.clip(lower=1))
     hist["forecast_contacts_per_hour"]=hist.forecast_contacts_per_hour.clip(lower=0).round(2)
     future=pd.date_range(pd.Timestamp(end)+pd.Timedelta(days=1),periods=7,freq="D")
     f=[]
@@ -217,15 +221,17 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
             for language in REGION_LANGUAGES[region]:
               for team in TEAMS:
                 for channel in CHANNELS:
-                    for shift,start_hour in [("Early",6),("Core",14),("Late",22)]:
+                    for shift_index,(shift,start_hour) in enumerate([("Early",6),("Core",14),("Late",22)]):
                         local_hours={(start_hour+i)%24 for i in range(8)}
                         demand=forecast[(forecast.forecast_date==d.strftime("%Y-%m-%d"))&(forecast.region==region)&(forecast.language==language)&(forecast.team==team)&(forecast.channel==channel)&(forecast.hour.isin(local_hours))]
                         req=int(demand.required_agents.max()) if not demand.empty else 0
                         eligible=active[(active.region==region)&(active.language==language)&(active.team==team)&((active.channel==channel)|(active.channel=="Chat"))]
-                        # Allocated agents capped by available headcount; this is capacity planning, not a roster.
-                        allocated=min(len(eligible),req)
+                        # Partition the language/team/channel pool across shifts so one agent is not counted three times.
+                        shift_pool=eligible.sort_values("agent_id").iloc[shift_index::3]
+                        available=len(shift_pool)
+                        allocated=min(available,req)
                         shift_rows.append({"date":d.strftime("%Y-%m-%d"),"region":region,"language":language,"team":team,"channel":channel,"shift":shift,
-                          "local_start_hour":start_hour,"local_end_hour":(start_hour+8)%24,"required_agents":req,"available_agents":len(eligible),
+                          "local_start_hour":start_hour,"local_end_hour":(start_hour+8)%24,"required_agents":req,"available_agents":available,
                           "allocated_agents":allocated,"coverage_gap":max(0,req-allocated),"time_zone":REGIONS[region],"is_synthetic":True})
     shifts=pd.DataFrame(shift_rows); shifts.to_csv(OUT/"shift_allocation.csv",index=False)
     # Daily service/commercial risk table. Thresholds documented and configurable in code.
