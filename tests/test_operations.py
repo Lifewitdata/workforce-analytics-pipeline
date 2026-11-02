@@ -25,5 +25,11 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual(set(qa_training.event_type),{"QA","Training"})
         self.assertIn("estimated_contract_capacity_hours",monthly.columns)
         self.assertTrue(set(hourly.region)<=set(REGIONS))
+        import json
+        manifest=json.loads((OUT/"refresh_manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue(manifest["run_id"])
+        self.assertTrue(manifest["is_synthetic"])
+        self.assertEqual(manifest["checks_failed"],0)
+        self.assertIn("chat_source_total",manifest["input_rows"])
 
 if __name__=="__main__": unittest.main()
