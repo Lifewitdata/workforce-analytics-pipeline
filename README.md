@@ -1,6 +1,6 @@
 # Workforce & Recruiting Analytics Pipeline
 
-> **Public repository status:** Employee-level source files, the 12 monthly employee files, `data/output/master_employees.csv`, and `excel/workforce_summary.xlsx` are withheld pending explicit approval to publish the employee data. The completed local project includes these files; this public checkout cannot run end to end until authorized inputs are supplied. Recorded validation and benchmark results refer to the complete local project. Synthetic recruiting data and aggregate results are included.
+> **Public repository status:** The monthly HR/recruiting workbook pipeline still requires employee source files that are withheld from this public checkout. The separate synthetic operations demo below is self-contained and runs end to end from a clean clone without those HR files. Do not confuse the two pipelines.
 
 **SYNTHETIC EDUCATIONAL PROJECT.** Employee upload treated as teaching data; original provenance is unconfirmed. Dates, monthly history, locations, exit reasons and recruiting data are simulated. No real employer impact is claimed.
 
@@ -19,7 +19,19 @@ python src/pipeline.py
 
 Python 3.10+ required. No Alteryx installation, cloud account, API key or database server is needed. Synthetic recruiting inputs and aggregate outputs are included; the employee inputs required for an end-to-end run are withheld as noted above. Optional LibreOffice automatically recalculates and checks the workbook if installed; otherwise open the generated workbook in Excel for calculation.
 
-To regenerate the seeded demo inputs deliberately: `python src/pipeline.py --generate-demo`.
+To regenerate the seeded HR demo inputs deliberately: `python src/pipeline.py --generate-demo`.
+
+### Separate operational analytics demo (runs from a clean clone)
+
+The repository now includes a separate hourly contact-centre operations model. It generates its own clearly synthetic chat and roster inputs, then builds hourly regional/language/channel/market/team metrics, demand forecasts, language-aware shift capacity, daily risk alerts and daily/weekly/monthly decision packs. It does not depend on the withheld monthly HR files.
+
+```bash
+python -m ops.build_operations --generate-demo
+python -m unittest discover -s tests -p "test_*.py"
+streamlit run dashboard/operations_app.py
+```
+
+See [operations runbook](README_OPERATIONS.md), [source contract and governance](docs/operations_data_contract.md), and [dashboard notes](dashboard/OPERATIONS_TABLEAU_BUILD.md). The Streamlit dashboard runs locally; the existing Tableau Public link below is a profile, not a direct visualization URL. Publishing a Tableau workbook and capturing genuine Tableau screenshots requires access to the author's Tableau Public account and Tableau Desktop, so this repository does not claim that publication has happened.
 
 ## Business problem
 
@@ -96,7 +108,7 @@ Recruiting is a separate synthetic population. Accepted applications do not equa
 
 ## Files
 
-`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` Tableau packaged workbook and dashboard documentation; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
+`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` Tableau packaged workbook, local operations dashboard and Tableau build notes; `ops/` independent operational planning pipeline; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
 
 ### Main analysis-ready outputs
 
@@ -131,11 +143,9 @@ Run `python optimization/baseline_pipeline.py` or `python optimization/optimized
 
 SQLite SQL is in `sql/kpi_monthly.sql` and executes automatically against intermediate employee flags and cleaned application records. All keys and numerical fields are checked against Python results. No external database service is needed.
 
-## Screenshots
+## Screenshot evidence
 
-- Summary preview: `dashboard/screenshots/summary_preview.png` when supplied with the delivery.
-- Add your own Excel screenshot after selecting a different month: `[screenshot placeholder]`.
-- Tableau dashboard screenshot: `[screenshot placeholder — add an export from the supplied workbook]`.
+The repository includes the packaged Tableau workbook but does not currently include genuine Tableau Desktop exports. Export screenshots after opening the workbook and checking the views in Tableau; do not treat a profile link or generated chart preview as a screenshot of the published dashboard. The new operational Streamlit dashboard is runnable locally with `streamlit run dashboard/operations_app.py`.
 
 ## Interview explanation
 
