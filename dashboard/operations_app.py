@@ -53,7 +53,7 @@ c1,c2,c3,c4 = st.columns(4)
 c1.metric("Contacts", f"{contacts:,}")
 c2.metric("Avg first response", f"{response:.1f} min")
 c3.metric("Conversion proxy", f"{conversion:.1%}")
-c4.metric("Uncovered shift segments", f"{gaps:,}")
+c4.metric("Uncovered shift hours", f"{gaps:,}")
 
 left,right = st.columns(2)
 with left:
