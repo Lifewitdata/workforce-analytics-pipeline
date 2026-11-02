@@ -1,6 +1,6 @@
 # Workforce & Recruiting Analytics Pipeline
 
-> **Public repository status:** Employee-level source files, the 12 monthly employee files, `data/output/master_employees.csv`, and `excel/workforce_summary.xlsx` are withheld pending explicit approval to publish the employee data. The completed local project includes these files; this public checkout cannot run end to end until authorized inputs are supplied. Recorded validation and benchmark results refer to the complete local project. Synthetic recruiting data and aggregate results are included.
+> **Public repository status:** The monthly HR/recruiting workbook pipeline still requires employee source files that are withheld from this public checkout. The separate synthetic operations demo below is self-contained and runs end to end from a clean clone without those HR files. Do not confuse the two pipelines.
 
 **SYNTHETIC EDUCATIONAL PROJECT.** Employee upload treated as teaching data; original provenance is unconfirmed. Dates, monthly history, locations, exit reasons and recruiting data are simulated. No real employer impact is claimed.
 
@@ -19,7 +19,19 @@ python src/pipeline.py
 
 Python 3.10+ required. No Alteryx installation, cloud account, API key or database server is needed. Synthetic recruiting inputs and aggregate outputs are included; the employee inputs required for an end-to-end run are withheld as noted above. Optional LibreOffice automatically recalculates and checks the workbook if installed; otherwise open the generated workbook in Excel for calculation.
 
-To regenerate the seeded demo inputs deliberately: `python src/pipeline.py --generate-demo`.
+To regenerate the seeded HR demo inputs deliberately: `python src/pipeline.py --generate-demo`.
+
+### Separate operational analytics demo (runs from a clean clone)
+
+The repository now includes a separate hourly contact-centre operations model. It generates its own clearly synthetic chat and roster inputs, then builds hourly regional/language/channel/market/team metrics, demand forecasts, language-aware shift capacity, daily risk alerts and daily/weekly/monthly decision packs. It does not depend on the withheld monthly HR files.
+
+```bash
+python -m ops.build_operations --generate-demo
+python -m unittest discover -s tests -p "test_*.py"
+streamlit run dashboard/operations_app.py
+```
+
+See [operations runbook](README_OPERATIONS.md), [source contract and governance](docs/operations_data_contract.md), and [dashboard notes](dashboard/OPERATIONS_TABLEAU_BUILD.md). The Streamlit dashboard runs locally; the existing Tableau Public link below is a profile, not a direct visualization URL. Publishing a Tableau workbook and capturing genuine Tableau screenshots requires access to the author's Tableau Public account and Tableau Desktop, so this repository does not claim that publication has happened.
 
 ## Business problem
 
