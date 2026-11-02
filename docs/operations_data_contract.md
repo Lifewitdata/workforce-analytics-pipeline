@@ -7,13 +7,13 @@ The operational model is a separate product from the monthly HR/recruiting pack.
 ## Required source contracts
 
 ### Chat interactions (one row per interaction)
-Required: `interaction_id` (stable unique key), `created_at` (ISO-8601 timestamp with offset or explicitly documented source timezone), `region` (AMER/EMEA/APAC), `language`, `channel`, `market`, `team`, `offered`, `resolved`, `first_response_minutes`, `handle_minutes`, `converted`, `queue_wait_minutes`, `reason`, `escalated`. Optional: customer pseudonymous key and product/intent fields. Never ingest message bodies or direct identifiers into the analytics mart.
+Required: `interaction_id` (stable unique key), `created_at` (ISO-8601 timestamp with offset or explicitly documented source timezone; demo uses local timestamp plus explicit `time_zone`), `region` (AMER/EMEA/APAC), `language`, `channel`, `market`, `team`, `offered`, `resolved`, `first_response_minutes`, `handle_minutes`, `converted`, `queue_wait_minutes`, `reason`, `escalated`. Optional: customer pseudonymous key and product/intent fields. Never ingest message bodies or direct identifiers into the analytics mart.
 
 ### HR/agent roster (one row per agent per effective interval)
 Required: `agent_id` (pseudonymous stable key), `team`, `region`, `language`, `channel`, `time_zone`, `effective_from`, `effective_to` (exclusive, nullable), `contract_hours_week`, `employment_status`. Dates are ISO-8601; each agent must have at most one active assignment on any date. Use effective-dated transfer records; never overwrite history.
 
-### QA/training (one row per reviewed interaction or training event)
-Required: event key, interaction or agent key, `event_type` (QA/Training), event timestamp, reviewer/training cohort pseudonymous key, and score/result fields appropriate to event type. Do not conflate training time with productive handling time.
+### QA and training (separate source tables)
+QA review rows use a stable review/event key, `interaction_id`, review timestamp, `qa_score`, and review status. Training event rows use a stable training event key, pseudonymous `agent_id`, training date, duration in minutes, module/category and completion status. Do not conflate training time with productive handling time. The demo uses separate `qa_training.csv` and `training_events.csv` sources.
 
 ## Validation gates
 
