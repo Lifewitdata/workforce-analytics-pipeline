@@ -15,6 +15,7 @@ OUT = ROOT / "data" / "output" / "operations"
 SEED = 20261102
 REGIONS = {"AMER": "America/New_York", "EMEA": "Europe/London", "APAC": "Asia/Singapore"}
 LANGUAGES = ["English", "Spanish", "French", "German", "Japanese"]
+REGION_LANGUAGES = {"AMER": ["English","Spanish","French"], "EMEA": ["English","French","German"], "APAC": ["English","Japanese"]}
 CHANNELS = ["Chat", "Messaging", "Email"]
 MARKETS = {"AMER": ["US", "CA", "MX"], "EMEA": ["UK", "DE", "FR"], "APAC": ["SG", "AU", "JP"]}
 TEAMS = ["Core Support", "Billing", "Technical Support", "Retention"]
@@ -44,10 +45,15 @@ def make_demo(days: int = 56) -> None:
     ])
     transfers.to_csv(RAW / "agent_assignments.csv", index=False)
     agent_frame.to_csv(RAW / "agents.csv", index=False)
-    chats=[]; qa=[]
+    chats=[]; qa=[]; training=[]
     chat_id=1
     for day in dates:
         active_agents=apply_effective_assignments(agent_frame,transfers,day)
+        if (day-dates[0]).days % 7 == 0:
+            for agent in rng.choice(agent_frame.agent_id.to_numpy(), size=6, replace=False):
+                training.append({"training_event_id":f"TR{len(training)+1:05d}","agent_id":str(agent),"training_date":str(day.date()),
+                    "training_minutes":int(rng.choice([30,45,60,90])),"module":str(rng.choice(["Product update","De-escalation","Privacy refresher","Tooling workflow"])),
+                    "completed":int(rng.random()<0.94),"is_synthetic":True})
         dow=day.dayofweek
         for region in REGIONS:
             for hour in range(24):
@@ -55,7 +61,7 @@ def make_demo(days: int = 56) -> None:
                 local_peak = 14 if region=="AMER" else (10 if region=="EMEA" else 11)
                 shape = 0.55 + 0.95*np.exp(-((hour-local_peak)/5.0)**2)
                 day_factor = 0.72 if dow>=5 else 1.0
-                for language in LANGUAGES:
+                for language in REGION_LANGUAGES[region]:
                     if (region=="AMER" and language not in ["English","Spanish","French"]) or (region=="EMEA" and language not in ["English","French","German"]) or (region=="APAC" and language not in ["English","Japanese"]):
                         continue
                     for channel in CHANNELS:
@@ -83,6 +89,7 @@ def make_demo(days: int = 56) -> None:
                             chat_id+=1
     pd.DataFrame(chats).to_csv(RAW/"chat_interactions.csv",index=False)
     pd.DataFrame(qa).to_csv(RAW/"qa_training.csv",index=False)
+    pd.DataFrame(training).to_csv(RAW/"training_events.csv",index=False)
 
 
 def apply_effective_assignments(agents: pd.DataFrame, assignments: pd.DataFrame, date: pd.Timestamp) -> pd.DataFrame:
@@ -159,7 +166,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     daily=chats.groupby(["date","region","language","channel","market","team"],as_index=False).agg(contacts=("interaction_id","count"),
       avg_response_minutes=("first_response_minutes","mean"),p90_response_minutes=("first_response_minutes",lambda s:s.quantile(.9)),
       conversion_rate=("converted","mean"),avg_queue_wait_minutes=("queue_wait_minutes","mean"),escalations=("escalated","sum"),offered=("offered","sum"))
-    gap=shifts.groupby(["date","region","language","team","channel"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())),max_agent_gap=("coverage_gap","max"))
+    gap=shifts.groupby(["date","region","language","team","channel"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())*8),max_agent_gap=("coverage_gap","max"))
     daily=daily.merge(gap,on=["date","region","language","team","channel"],how="left").fillna({"uncovered_shift_hours":0,"max_agent_gap":0})
     daily["risk_reasons"]=daily.apply(lambda r:"; ".join([x for x,v in [("coverage gap",r.max_agent_gap>0),("slow response",r.p90_response_minutes>10),("low conversion",r.conversion_rate<.08),("queue saturation",r.avg_queue_wait_minutes>8)] if v]) or "none",axis=1)
     daily["risk_level"]=daily.risk_reasons.map(lambda x:"HIGH" if sum(k in x for k in ["coverage gap","slow response","queue saturation"])>=2 else ("MEDIUM" if x!="none" else "LOW"))
@@ -195,7 +202,17 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     team["resolution_rate"]=team.resolved/team.handled
     team.to_csv(OUT/"team_productivity.csv",index=False)
     q=qa.merge(chats[["interaction_id","team","reason","escalated"]],on="interaction_id",how="inner")
-    q.groupby(["team","training_flag"],as_index=False).agg(reviews=("interaction_id","count"),avg_qa_score=("qa_score","mean"),review_rate=("reviewed","mean")).to_csv(OUT/"qa_training_split.csv",index=False)
+    qa_summary=q.groupby("team",as_index=False).agg(events=("interaction_id","count"),avg_qa_score=("qa_score","mean"),review_rate=("reviewed","mean"))
+    qa_summary["event_type"]="QA"; qa_summary["training_minutes"]=np.nan; qa_summary["completion_rate"]=np.nan
+    training=pd.read_csv(RAW/"training_events.csv",parse_dates=["training_date"])
+    training["team"]=None
+    for training_date, idx in training.groupby("training_date").groups.items():
+        active=apply_effective_assignments(agents,transfers,pd.Timestamp(training_date))
+        lookup=active.set_index("agent_id").team
+        training.loc[idx,"team"]=training.loc[idx,"agent_id"].map(lookup)
+    training_summary=training.groupby("team",as_index=False).agg(events=("training_event_id","count"),training_minutes=("training_minutes","sum"),completion_rate=("completed","mean"))
+    training_summary["event_type"]="Training"; training_summary["avg_qa_score"]=np.nan; training_summary["review_rate"]=np.nan
+    pd.concat([qa_summary,training_summary],ignore_index=True)[["team","event_type","events","avg_qa_score","review_rate","training_minutes","completion_rate"]].to_csv(OUT/"qa_training_split.csv",index=False)
     chats.groupby(["reason","escalated"],as_index=False).agg(interactions=("interaction_id","count"),avg_response_minutes=("first_response_minutes","mean"),conversion_rate=("converted","mean")).to_csv(OUT/"reason_escalation_deep_dive.csv",index=False)
     # Data quality audit results, with hard fails for critical source contract violations.
     dq=[]
