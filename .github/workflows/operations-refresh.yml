@@ -1,5 +1,12 @@
 name: Operational analytics refresh
 on:
+  pull_request:
+    paths:
+      - 'ops/**'
+      - 'tests/**'
+      - 'dashboard/operations_app.py'
+      - '.github/workflows/operations-refresh.yml'
+      - 'requirements.txt'
   workflow_dispatch:
   schedule:
     - cron: "17 5 * * *"
