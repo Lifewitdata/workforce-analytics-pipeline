@@ -18,7 +18,11 @@ class OperationsTests(unittest.TestCase):
         shifts=pd.read_csv(OUT/"shift_allocation.csv")
         monthly=pd.read_csv(OUT/"monthly_executive_summary.csv")
         self.assertTrue({"region","language","channel","market","team","time_zone"}<=set(hourly.columns))
-        self.assertTrue({"language","required_agents","allocated_agents","coverage_gap"}<=set(shifts.columns))
+        self.assertTrue({"language","required_agents","allocated_agents","coverage_gap","time_zone"}<=set(shifts.columns))
+        risk=pd.read_csv(OUT/"daily_service_commercial_risk.csv")
+        qa_training=pd.read_csv(OUT/"qa_training_split.csv")
+        self.assertIn("time_zone",risk.columns)
+        self.assertEqual(set(qa_training.event_type),{"QA","Training"})
         self.assertIn("estimated_contract_capacity_hours",monthly.columns)
         self.assertTrue(set(hourly.region)<=set(REGIONS))
 
