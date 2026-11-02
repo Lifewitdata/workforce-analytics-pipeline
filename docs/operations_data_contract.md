@@ -7,13 +7,13 @@ The operational model is a separate product from the monthly HR/recruiting pack.
 ## Required source contracts
 
 ### Chat interactions (one row per interaction)
-Required: `interaction_id` (stable unique key), `created_at` (ISO-8601 timestamp with offset or explicitly documented source timezone; demo uses local timestamp plus explicit `time_zone`), `region` (AMER/EMEA/APAC), `language`, `channel`, `market`, `team`, `offered`, `resolved`, `first_response_minutes`, `handle_minutes`, `converted`, `queue_wait_minutes`, `reason`, `escalated`. Optional: customer pseudonymous key and product/intent fields. Never ingest message bodies or direct identifiers into the analytics mart.
+Required: `interaction_id` (stable unique key), `created_at` (ISO-8601 local wall-clock timestamp), `time_zone` (valid IANA timezone for that local timestamp), `region` (AMER/EMEA/APAC), `language`, `channel`, `market`, `team`, `offered`, `resolved`, `first_response_minutes`, `handle_minutes`, `converted`, `queue_wait_minutes`, `reason`, `escalated`. Optional: customer pseudonymous key and product/intent fields. Never ingest message bodies or direct identifiers into the analytics mart.
 
-### HR/agent roster (one row per agent per effective interval)
-Required: `agent_id` (pseudonymous stable key), `team`, `region`, `language`, `channel`, `time_zone`, `effective_from`, `effective_to` (exclusive, nullable), `contract_hours_week`, `employment_status`. Dates are ISO-8601; each agent must have at most one active assignment on any date. Use effective-dated transfer records; never overwrite history.
+### HR/agent roster and effective-dated assignment history
+The base roster (`agents.csv`) has one row per pseudonymous agent: `agent_id`, `team`, `home_region`, `home_language`, `time_zone`, `contract_hours_week`, `employment_status`. The assignment history (`agent_assignments.csv`) has `agent_id`, `effective_from`, `effective_to` (exclusive, nullable), `region`, `language`, `channel`, `team`, `time_zone`. Dates are ISO-8601; each agent must have at most one active assignment on any date. Use half-open intervals [from,to); never overwrite history.
 
 ### QA and training (separate source tables)
-QA review rows use a stable review/event key, `interaction_id`, review timestamp, `qa_score`, and review status. Training event rows use a stable training event key, pseudonymous `agent_id`, training date, duration in minutes, module/category and completion status. Do not conflate training time with productive handling time. The demo uses separate `qa_training.csv` and `training_events.csv` sources.
+QA review rows use a stable review/event key, `interaction_id`, review timestamp, `qa_score`, and review status. Training event rows use a stable training event key, pseudonymous `agent_id`, training date, duration in minutes, module/category and completion status. Do not conflate training time with productive handling time. The demo uses separate `qa_training.csv` and `training_events.csv` sources. The CLI accepts `--chat-source`, `--agents-source`, `--assignments-source`, `--qa-source` and `--training-source`; all five must be supplied together. Fields outside the required schema are dropped before transformation to avoid carrying unapproved source columns into the mart.
 
 ## Validation gates
 
