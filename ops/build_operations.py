@@ -107,13 +107,64 @@ def apply_effective_assignments(agents: pd.DataFrame, assignments: pd.DataFrame,
     return x
 
 
-def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False) -> dict:
-    if regenerate or not (RAW/"chat_interactions.csv").exists(): make_demo()
+CHAT_COLUMNS=["interaction_id","created_at","region","language","channel","market","team","time_zone","agent_id","offered","resolved","first_response_minutes","handle_minutes","converted","queue_wait_minutes","reason","escalated"]
+AGENT_COLUMNS=["agent_id","team","home_region","home_language","time_zone","contract_hours_week","employment_status"]
+ASSIGNMENT_COLUMNS=["agent_id","effective_from","effective_to","region","language","channel","team","time_zone"]
+QA_COLUMNS=["interaction_id","qa_score","training_flag","reviewed"]
+TRAINING_COLUMNS=["training_event_id","agent_id","training_date","training_minutes","module","completed"]
+
+
+def validate_source_contract(chats, agents, transfers, qa, training):
+    """Fail closed on missing fields, invalid dimensions, keys or intervals."""
+    for name, frame, columns in [("chat",chats,CHAT_COLUMNS),("agent roster",agents,AGENT_COLUMNS),
+                                 ("agent assignments",transfers,ASSIGNMENT_COLUMNS),("QA",qa,QA_COLUMNS),
+                                 ("training",training,TRAINING_COLUMNS)]:
+        missing=sorted(set(columns)-set(frame.columns))
+        if missing: raise ValueError(f"{name} source missing required columns: {missing}")
+    if chats.interaction_id.isna().any() or chats.interaction_id.duplicated().any(): raise ValueError("chat interaction_id must be non-null and unique")
+    if agents.agent_id.isna().any() or agents.agent_id.duplicated().any(): raise ValueError("agent_id must be non-null and unique in base roster")
+    if not set(chats.region.dropna()) <= set(REGIONS): raise ValueError("chat region must be AMER, EMEA or APAC")
+    for col in ["language","channel","market","team","time_zone","reason","agent_id"]:
+        if chats[col].isna().any() or chats[col].astype(str).str.strip().eq("").any(): raise ValueError(f"chat {col} cannot be blank")
+    if not set(chats.channel.dropna()) <= set(CHANNELS): raise ValueError("chat channel outside approved domain")
+    for col in ["offered","resolved","converted","escalated"]:
+        if not set(pd.to_numeric(chats[col],errors="coerce").dropna().unique()) <= {0,1}: raise ValueError(f"chat {col} must be binary")
+    for col in ["first_response_minutes","handle_minutes","queue_wait_minutes"]:
+        if pd.to_numeric(chats[col],errors="coerce").isna().any() or (pd.to_numeric(chats[col])<0).any(): raise ValueError(f"chat {col} must be numeric and non-negative")
+    if set(chats.agent_id)-set(agents.agent_id): raise ValueError("chat agent_id is not present in the base roster")
+    if set(transfers.agent_id)-set(agents.agent_id): raise ValueError("assignment agent_id is not present in the base roster")
+    if set(qa.interaction_id)-set(chats.interaction_id): raise ValueError("QA interaction_id does not resolve to chat source")
+    if set(training.agent_id)-set(agents.agent_id): raise ValueError("training agent_id does not resolve to base roster")
+    if transfers.effective_from.isna().any(): raise ValueError("assignment effective_from is required")
+    if (pd.to_numeric(agents.contract_hours_week,errors="coerce")<=0).any(): raise ValueError("contract_hours_week must be positive")
+    intervals=transfers.copy(); intervals["effective_from"]=pd.to_datetime(intervals.effective_from,errors="coerce"); intervals["effective_to"]=pd.to_datetime(intervals.effective_to,errors="coerce")
+    if intervals.effective_from.isna().any(): raise ValueError("assignment effective_from must be a valid date")
+    for _, group in intervals.groupby("agent_id"):
+        group=group.sort_values("effective_from").reset_index(drop=True)
+        for i in range(1,len(group)):
+            prior_end=group.loc[i-1,"effective_to"]
+            if pd.isna(prior_end) or prior_end>group.loc[i,"effective_from"]: raise ValueError("effective-dated assignment intervals overlap")
+
+
+def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False, source_files: dict | None=None) -> dict:
+    if source_files is None:
+        if regenerate or not (RAW/"chat_interactions.csv").exists(): make_demo()
+        source_files={"chat":RAW/"chat_interactions.csv","agents":RAW/"agents.csv","assignments":RAW/"agent_assignments.csv",
+                      "qa":RAW/"qa_training.csv","training":RAW/"training_events.csv"}
+    expected={"chat","agents","assignments","qa","training"}
+    if set(source_files)!=expected: raise ValueError(f"Supply all five sources together: {sorted(expected)}")
+    chats=pd.read_csv(source_files["chat"],parse_dates=["created_at"])
+    agents=pd.read_csv(source_files["agents"])
+    transfers=pd.read_csv(source_files["assignments"])
+    qa=pd.read_csv(source_files["qa"])
+    training_source=pd.read_csv(source_files["training"],parse_dates=["training_date"])
+    validate_source_contract(chats,agents,transfers,qa,training_source)
+    chats=chats[CHAT_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in chats.columns else [])].copy()
+    agents=agents[AGENT_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in agents.columns else [])].copy()
+    qa=qa[QA_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in qa.columns else [])].copy()
+    training_source=training_source[TRAINING_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in training_source.columns else [])].copy()
+    if "is_synthetic" not in chats: chats["is_synthetic"]=False
     OUT.mkdir(parents=True,exist_ok=True)
-    chats=pd.read_csv(RAW/"chat_interactions.csv",parse_dates=["created_at"])
-    agents=pd.read_csv(RAW/"agents.csv")
-    transfers=pd.read_csv(RAW/"agent_assignments.csv")
-    qa=pd.read_csv(RAW/"qa_training.csv")
     chats=chats[(chats.created_at.dt.date>=pd.Timestamp(start).date())&(chats.created_at.dt.date<=pd.Timestamp(end).date())].copy()
     if chats.empty: raise ValueError("No chat interactions in requested reporting window")
     chats["date"]=chats.created_at.dt.strftime("%Y-%m-%d")
@@ -204,7 +255,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     q=qa.merge(chats[["interaction_id","team","reason","escalated"]],on="interaction_id",how="inner")
     qa_summary=q.groupby("team",as_index=False).agg(events=("interaction_id","count"),avg_qa_score=("qa_score","mean"),review_rate=("reviewed","mean"))
     qa_summary["event_type"]="QA"; qa_summary["training_minutes"]=np.nan; qa_summary["completion_rate"]=np.nan
-    training=pd.read_csv(RAW/"training_events.csv",parse_dates=["training_date"])
+    training=training_source.copy()
     training["team"]=None
     for training_date, idx in training.groupby("training_date").groups.items():
         active=apply_effective_assignments(agents,transfers,pd.Timestamp(training_date))
@@ -222,9 +273,10 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     add("allowed region dimension",set(chats.region)<=set(REGIONS),str(sorted(chats.region.unique())))
     add("required operational dimensions populated",bool(chats[["language","channel","market","team","time_zone"]].notna().all().all()),"language/channel/market/team/time_zone must be populated")
     add("agent keys resolve",set(chats.agent_id)<=set(agents.agent_id),"chat agent IDs must exist in roster")
+    add("language/channel/timezone complete",bool(chats[["language","channel","time_zone"]].notna().all().all()),"required coverage dimensions populated")
     add("no fictional site labels",not chats.region.astype(str).str.match(r"Site [ABC]").any(),"region must be AMER/EMEA/APAC")
     add("response-time valid",bool(chats.first_response_minutes.ge(0).all()),"minutes >= 0")
-    add("QA interaction referential integrity",set(qa.interaction_id)<=set(pd.read_csv(RAW/"chat_interactions.csv").interaction_id),"QA rows reference chat IDs")
+    add("QA interaction referential integrity",set(qa.interaction_id)<=set(pd.read_csv(source_files["chat"]).interaction_id),"QA rows reference chat IDs")
     add("effective-dated assignments valid",pd.to_datetime(transfers.effective_from).notna().all(),"effective_from required")
     overlap_ok=True
     for _, group in transfers.assign(effective_from=pd.to_datetime(transfers.effective_from),effective_to=pd.to_datetime(transfers.effective_to,errors="coerce")).groupby("agent_id"):
@@ -240,5 +292,8 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     return {"chat_rows":len(chats),"hourly_segments":len(hourly),"forecast_rows":len(forecast),"shift_rows":len(shifts),"risk_rows":len(daily),"checks":len(dq)}
 
 if __name__=="__main__":
-    p=argparse.ArgumentParser(); p.add_argument("--generate-demo",action="store_true"); p.add_argument("--start",default="2026-08-01"); p.add_argument("--end",default="2026-09-25"); a=p.parse_args()
-    print(build(a.start,a.end,a.generate_demo))
+    p=argparse.ArgumentParser(); p.add_argument("--generate-demo",action="store_true"); p.add_argument("--start",default="2026-08-01"); p.add_argument("--end",default="2026-09-25")
+    for key in ["chat","agents","assignments","qa","training"]: p.add_argument("--"+key+"-source")
+    a=p.parse_args(); supplied={k:getattr(a,k+"_source") for k in ["chat","agents","assignments","qa","training"]}
+    source_files=None if all(v is None for v in supplied.values()) else {k:v for k,v in supplied.items() if v is not None}
+    print(build(a.start,a.end,a.generate_demo,source_files))
