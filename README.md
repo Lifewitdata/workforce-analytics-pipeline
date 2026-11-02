@@ -108,7 +108,7 @@ Recruiting is a separate synthetic population. Accepted applications do not equa
 
 ## Files
 
-`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` Tableau packaged workbook and dashboard documentation; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
+`data/raw/source/` original upload; `data/raw/employees/` monthly snapshots; `data/raw/recruiting/` application cohorts; `data/output/` CSVs and logs; `src/` modular Python pipeline; `tests/` boundary tests; `notebooks/` executed EDA; `sql/` verified SQLite KPI logic; `optimization/` strategies and measured results; `logs/` generated logs; `data/interim/` cleaned intermediates; `excel/` workbook; `dashboard/` Tableau packaged workbook, local operations dashboard and Tableau build notes; `ops/` independent operational planning pipeline; `docs/` definitions, quality log, dictionary, simulation rules, optimization, validation, refresh, insights and GenAI disclosure.
 
 ### Main analysis-ready outputs
 
@@ -143,11 +143,9 @@ Run `python optimization/baseline_pipeline.py` or `python optimization/optimized
 
 SQLite SQL is in `sql/kpi_monthly.sql` and executes automatically against intermediate employee flags and cleaned application records. All keys and numerical fields are checked against Python results. No external database service is needed.
 
-## Screenshots
+## Screenshot evidence
 
-- Summary preview: `dashboard/screenshots/summary_preview.png` when supplied with the delivery.
-- Add your own Excel screenshot after selecting a different month: `[screenshot placeholder]`.
-- Tableau dashboard screenshot: `[screenshot placeholder — add an export from the supplied workbook]`.
+The repository includes the packaged Tableau workbook but does not currently include genuine Tableau Desktop exports. Export screenshots after opening the workbook and checking the views in Tableau; do not treat a profile link or generated chart preview as a screenshot of the published dashboard. The new operational Streamlit dashboard is runnable locally with `streamlit run dashboard/operations_app.py`.
 
 ## Interview explanation
 
