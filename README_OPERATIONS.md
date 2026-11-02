@@ -11,7 +11,20 @@ python -m unittest discover -s tests -p "test_*.py"
 streamlit run dashboard/operations_app.py
 ```
 
-Generated files are in `data/output/operations/`; source-like demo inputs are in `data/demo/operations/`. Demo date window defaults to 1 August–25 September 2026; adjust `--start` and `--end` as required.
+Generated files are in `data/output/operations/`; source-like demo inputs are generated in `data/demo/operations/`. Demo date window defaults to 1 August–25 September 2026; adjust `--start` and `--end` as required.
+
+To replace the deterministic generator with validated CSV imports, supply all five sources together. The code validates required columns, keys, dimensions, duration/score values, assignment intervals and time zones, and drops fields outside the documented allow-list:
+
+```bash
+python -m ops.build_operations \\
+  --chat-source data/incoming/chat_interactions.csv \\
+  --agents-source data/incoming/agents.csv \\
+  --assignments-source data/incoming/agent_assignments.csv \\
+  --qa-source data/incoming/qa_reviews.csv \\
+  --training-source data/incoming/training_events.csv
+```
+
+See the complete schemas in [the data contract](docs/operations_data_contract.md). Never commit real employee or customer-level source files.
 
 ## Operational outputs
 
