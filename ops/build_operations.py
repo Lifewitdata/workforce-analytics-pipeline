@@ -148,7 +148,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     for d in future:
         active=apply_effective_assignments(agents,transfers,d)
         for region in REGIONS:
-            for language in LANGUAGES:
+            for language in REGION_LANGUAGES[region]:
               for team in TEAMS:
                 for channel in CHANNELS:
                     for shift,start_hour in [("Early",6),("Core",14),("Late",22)]:
@@ -163,11 +163,11 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
                           "allocated_agents":allocated,"coverage_gap":max(0,req-allocated),"time_zone":REGIONS[region],"is_synthetic":True})
     shifts=pd.DataFrame(shift_rows); shifts.to_csv(OUT/"shift_allocation.csv",index=False)
     # Daily service/commercial risk table. Thresholds documented and configurable in code.
-    daily=chats.groupby(["date","region","language","channel","market","team"],as_index=False).agg(contacts=("interaction_id","count"),
+    daily=chats.groupby(["date","region","language","channel","market","team","time_zone"],as_index=False).agg(contacts=("interaction_id","count"),
       avg_response_minutes=("first_response_minutes","mean"),p90_response_minutes=("first_response_minutes",lambda s:s.quantile(.9)),
       conversion_rate=("converted","mean"),avg_queue_wait_minutes=("queue_wait_minutes","mean"),escalations=("escalated","sum"),offered=("offered","sum"))
-    gap=shifts.groupby(["date","region","language","team","channel"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())*8),max_agent_gap=("coverage_gap","max"))
-    daily=daily.merge(gap,on=["date","region","language","team","channel"],how="left").fillna({"uncovered_shift_hours":0,"max_agent_gap":0})
+    gap=shifts.groupby(["date","region","language","team","channel","time_zone"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())*8),max_agent_gap=("coverage_gap","max"))
+    daily=daily.merge(gap,on=["date","region","language","team","channel","time_zone"],how="left").fillna({"uncovered_shift_hours":0,"max_agent_gap":0})
     daily["risk_reasons"]=daily.apply(lambda r:"; ".join([x for x,v in [("coverage gap",r.max_agent_gap>0),("slow response",r.p90_response_minutes>10),("low conversion",r.conversion_rate<.08),("queue saturation",r.avg_queue_wait_minutes>8)] if v]) or "none",axis=1)
     daily["risk_level"]=daily.risk_reasons.map(lambda x:"HIGH" if sum(k in x for k in ["coverage gap","slow response","queue saturation"])>=2 else ("MEDIUM" if x!="none" else "LOW"))
     daily.to_csv(OUT/"daily_service_commercial_risk.csv",index=False)
@@ -175,7 +175,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     tracker=daily.groupby(["date","region"],as_index=False).agg(contacts=("contacts","sum"),avg_response_minutes=("avg_response_minutes","mean"),
       conversion_rate=("conversion_rate","mean"),high_risk_segments=("risk_level",lambda s:int((s=="HIGH").sum())),uncovered_shift_hours=("uncovered_shift_hours","sum"))
     tracker.to_csv(OUT/"daily_tracker.csv",index=False)
-    weekly=shifts.assign(week=pd.to_datetime(shifts.date).dt.to_period("W").astype(str)).groupby(["week","region","language","team","channel"],as_index=False).agg(required_agent_shifts=("required_agents","sum"),allocated_agent_shifts=("allocated_agents","sum"),coverage_gap_shifts=("coverage_gap",lambda s:int((s>0).sum())),peak_gap=("coverage_gap","max"))
+    weekly=shifts.assign(week=pd.to_datetime(shifts.date).dt.to_period("W").astype(str)).groupby(["week","region","language","team","channel","time_zone"],as_index=False).agg(required_agent_shifts=("required_agents","sum"),allocated_agent_shifts=("allocated_agents","sum"),coverage_gap_shifts=("coverage_gap",lambda s:int((s>0).sum())),peak_gap=("coverage_gap","max"))
     weekly.to_csv(OUT/"weekly_capacity_brief.csv",index=False)
     chats["month"]=chats.created_at.dt.to_period("M").astype(str)
     monthly=chats.groupby(["month","region"],as_index=False).agg(contacts=("interaction_id","count"),resolved=("resolved","sum"),conversions=("converted","sum"),
@@ -193,7 +193,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     monthly["resolution_rate"]=monthly.resolved/monthly.contacts
     monthly["conversion_rate"]=monthly.conversions/monthly.contacts
     monthly.to_csv(OUT/"monthly_executive_summary.csv",index=False)
-    # Team/agent productivity and QA/training split. Demo agent mapping round-robin, not identity evidence.
+    # Team/agent productivity uses the synthetic agent assignment stored on each generated interaction.
     ids=chats[["interaction_id","agent_id","team","resolved","handle_minutes","escalated"]].copy()
     prod=ids.groupby(["agent_id","team"],as_index=False).agg(handled=("interaction_id","count"),resolved=("resolved","sum"),handle_minutes=("handle_minutes","sum"),escalations=("escalated","sum"))
     prod["resolution_rate"]=prod.resolved/prod.handled
