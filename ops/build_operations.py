@@ -130,8 +130,11 @@ def validate_source_contract(chats, agents, transfers, qa, training):
     for col in ["language","channel","market","team","time_zone","reason","agent_id"]:
         if chats[col].isna().any() or chats[col].astype(str).str.strip().eq("").any(): raise ValueError(f"chat {col} cannot be blank")
     if not set(chats.channel.dropna()) <= set(CHANNELS): raise ValueError("chat channel outside approved domain")
+    if not set(agents.home_region.dropna()) <= set(REGIONS) or not set(transfers.region.dropna()) <= set(REGIONS): raise ValueError("roster and assignment regions must be AMER, EMEA or APAC")
+    if not set(transfers.channel.dropna()) <= set(CHANNELS): raise ValueError("assignment channel outside approved domain")
     for col in ["offered","resolved","converted","escalated"]:
-        if not set(pd.to_numeric(chats[col],errors="coerce").dropna().unique()) <= {0,1}: raise ValueError(f"chat {col} must be binary")
+        values=pd.to_numeric(chats[col],errors="coerce")
+        if values.isna().any() or not set(values.unique()) <= {0,1}: raise ValueError(f"chat {col} must be non-null and binary")
     for col in ["first_response_minutes","handle_minutes","queue_wait_minutes"]:
         if pd.to_numeric(chats[col],errors="coerce").isna().any() or (pd.to_numeric(chats[col])<0).any(): raise ValueError(f"chat {col} must be numeric and non-negative")
     try:
@@ -151,9 +154,14 @@ def validate_source_contract(chats, agents, transfers, qa, training):
     for col in ["home_region","home_language","team","time_zone"]:
         if agents[col].isna().any() or agents[col].astype(str).str.strip().eq("").any(): raise ValueError(f"agent roster {col} cannot be blank")
     if transfers.effective_from.isna().any(): raise ValueError("assignment effective_from is required")
-    if (pd.to_numeric(agents.contract_hours_week,errors="coerce")<=0).any(): raise ValueError("contract_hours_week must be positive")
+    contracted=pd.to_numeric(agents.contract_hours_week,errors="coerce")
+    if contracted.isna().any() or (contracted<=0).any(): raise ValueError("contract_hours_week must be positive and numeric")
+    if pd.to_numeric(qa.reviewed,errors="coerce").isna().any() or not set(pd.to_numeric(qa.reviewed).unique()) <= {0,1}: raise ValueError("QA reviewed must be non-null and binary")
+    if pd.to_datetime(training.training_date,errors="coerce").isna().any(): raise ValueError("training_date must be a valid date")
     intervals=transfers.copy(); intervals["effective_from"]=pd.to_datetime(intervals.effective_from,errors="coerce"); intervals["effective_to"]=pd.to_datetime(intervals.effective_to,errors="coerce")
     if intervals.effective_from.isna().any(): raise ValueError("assignment effective_from must be a valid date")
+    raw_end=transfers.effective_to.astype(str).str.strip()
+    if (raw_end.ne("") & intervals.effective_to.isna()).any(): raise ValueError("assignment effective_to must be blank or a valid date")
     for _, group in intervals.groupby("agent_id"):
         group=group.sort_values("effective_from").reset_index(drop=True)
         for i in range(1,len(group)):
@@ -178,7 +186,10 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     agents=agents[AGENT_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in agents.columns else [])].copy()
     qa=qa[QA_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in qa.columns else [])].copy()
     training_source=training_source[TRAINING_COLUMNS+([ "is_synthetic" ] if "is_synthetic" in training_source.columns else [])].copy()
+    transfers=transfers[ASSIGNMENT_COLUMNS].copy()
     if "is_synthetic" not in chats: chats["is_synthetic"]=False
+    if chats.is_synthetic.nunique(dropna=False)>1: raise ValueError("Do not mix synthetic and production chat rows in one refresh")
+    source_is_synthetic=bool(chats.is_synthetic.all())
     OUT.mkdir(parents=True,exist_ok=True)
     chats=chats[(chats.created_at.dt.date>=pd.Timestamp(start).date())&(chats.created_at.dt.date<=pd.Timestamp(end).date())].copy()
     if chats.empty: raise ValueError("No chat interactions in requested reporting window")
@@ -190,6 +201,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
        conversions=("converted","sum"),avg_response_minutes=("first_response_minutes","mean"),p90_response_minutes=("first_response_minutes",lambda s:s.quantile(.9)),
        avg_handle_minutes=("handle_minutes","mean"),avg_queue_wait_minutes=("queue_wait_minutes","mean"),escalations=("escalated","sum")).reset_index()
     hourly["service_level_5m"]=chats.groupby(dims).first_response_minutes.apply(lambda s:(s<=5).mean()).values
+    hourly["is_synthetic"]=source_is_synthetic
     hourly.to_csv(OUT/"chat_hourly_by_region_language_channel_market_team.csv",index=False)
     # Hour-of-week profile with trend-adjusted last 14 days; forecast next seven days.
     chats["weekday"]=chats.created_at.dt.dayofweek
@@ -212,6 +224,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     forecast["workload_hours"]=forecast.forecast_contacts_per_hour*forecast.channel.map({"Chat":7.5,"Messaging":6.5,"Email":9.0})/60
     forecast["required_agents"]=np.ceil(forecast.workload_hours/(0.5*0.82)).astype(int)
     forecast["forecast_method"]="weekday-hour seasonal baseline (65% full-window profile, 35% recent profile)"
+    forecast["is_synthetic"]=source_is_synthetic
     forecast.to_csv(OUT/"hourly_demand_forecast.csv",index=False)
     # Build a transparent 8h shift plan; shift windows in local timezone, assignment effective at forecast date.
     shift_rows=[]
@@ -232,7 +245,7 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
                         allocated=min(available,req)
                         shift_rows.append({"date":d.strftime("%Y-%m-%d"),"region":region,"language":language,"team":team,"channel":channel,"shift":shift,
                           "local_start_hour":start_hour,"local_end_hour":(start_hour+8)%24,"required_agents":req,"available_agents":available,
-                          "allocated_agents":allocated,"coverage_gap":max(0,req-allocated),"time_zone":REGIONS[region],"is_synthetic":True})
+                          "allocated_agents":allocated,"coverage_gap":max(0,req-allocated),"time_zone":REGIONS[region],"is_synthetic":source_is_synthetic})
     shifts=pd.DataFrame(shift_rows); shifts.to_csv(OUT/"shift_allocation.csv",index=False)
     # Daily service/commercial risk table. Thresholds documented and configurable in code.
     daily=chats.groupby(["date","region","language","channel","market","team","time_zone"],as_index=False).agg(contacts=("interaction_id","count"),
@@ -242,14 +255,17 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     daily=daily.merge(gap,on=["date","region","language","team","channel","time_zone"],how="left").fillna({"uncovered_shift_hours":0,"max_agent_gap":0})
     daily["risk_reasons"]=daily.apply(lambda r:"; ".join([x for x,v in [("coverage gap",r.max_agent_gap>0),("slow response",r.p90_response_minutes>10),("low conversion",r.conversion_rate<.08),("queue saturation",r.avg_queue_wait_minutes>8)] if v]) or "none",axis=1)
     daily["risk_level"]=daily.risk_reasons.map(lambda x:"HIGH" if sum(k in x for k in ["coverage gap","slow response","queue saturation"])>=2 else ("MEDIUM" if x!="none" else "LOW"))
+    daily["is_synthetic"]=source_is_synthetic
     daily.to_csv(OUT/"daily_service_commercial_risk.csv",index=False)
     # Daily tracker, weekly capacity brief, monthly exec summary.
     tracker=daily.groupby(["date","region"],as_index=False).agg(contacts=("contacts","sum"),avg_response_minutes=("avg_response_minutes","mean"),
       conversion_rate=("conversion_rate","mean"),high_risk_segments=("risk_level",lambda s:int((s=="HIGH").sum())))
     coverage=shifts.groupby(["date","region"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())*8))
     tracker=tracker.merge(coverage,on=["date","region"],how="left").fillna({"uncovered_shift_hours":0})
+    tracker["is_synthetic"]=source_is_synthetic
     tracker.to_csv(OUT/"daily_tracker.csv",index=False)
     weekly=shifts.assign(week=pd.to_datetime(shifts.date).dt.to_period("W").astype(str)).groupby(["week","region","language","team","channel","time_zone"],as_index=False).agg(required_agent_shifts=("required_agents","sum"),allocated_agent_shifts=("allocated_agents","sum"),coverage_gap_shifts=("coverage_gap",lambda s:int((s>0).sum())),peak_gap=("coverage_gap","max"))
+    weekly["is_synthetic"]=source_is_synthetic
     weekly.to_csv(OUT/"weekly_capacity_brief.csv",index=False)
     chats["month"]=chats.created_at.dt.to_period("M").astype(str)
     monthly=chats.groupby(["month","region"],as_index=False).agg(contacts=("interaction_id","count"),resolved=("resolved","sum"),conversions=("converted","sum"),
@@ -266,14 +282,17 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
     monthly["handling_utilisation"]=monthly.productive_handling_hours/monthly.estimated_contract_capacity_hours.replace(0,np.nan)
     monthly["resolution_rate"]=monthly.resolved/monthly.contacts
     monthly["conversion_rate"]=monthly.conversions/monthly.contacts
+    monthly["is_synthetic"]=source_is_synthetic
     monthly.to_csv(OUT/"monthly_executive_summary.csv",index=False)
     # Team/agent productivity uses the synthetic agent assignment stored on each generated interaction.
     ids=chats[["interaction_id","agent_id","team","resolved","handle_minutes","escalated"]].copy()
     prod=ids.groupby(["agent_id","team"],as_index=False).agg(handled=("interaction_id","count"),resolved=("resolved","sum"),handle_minutes=("handle_minutes","sum"),escalations=("escalated","sum"))
     prod["resolution_rate"]=prod.resolved/prod.handled
+    prod["is_synthetic"]=source_is_synthetic
     prod.to_csv(OUT/"agent_team_productivity.csv",index=False)
     team=prod.groupby("team",as_index=False).agg(agents=("agent_id","nunique"),handled=("handled","sum"),resolved=("resolved","sum"),avg_handle_minutes=("handle_minutes",lambda s:s.sum()/max(1,prod.loc[s.index,"handled"].sum())),escalations=("escalations","sum"))
     team["resolution_rate"]=team.resolved/team.handled
+    team["is_synthetic"]=source_is_synthetic
     team.to_csv(OUT/"team_productivity.csv",index=False)
     q=qa.merge(chats[["interaction_id","team","reason","escalated"]],on="interaction_id",how="inner")
     qa_summary=q.groupby("team",as_index=False).agg(events=("interaction_id","count"),avg_qa_score=("qa_score","mean"),review_rate=("reviewed","mean"))
@@ -286,8 +305,12 @@ def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False
         training.loc[idx,"team"]=training.loc[idx,"agent_id"].map(lookup)
     training_summary=training.groupby("team",as_index=False).agg(events=("training_event_id","count"),training_minutes=("training_minutes","sum"),completion_rate=("completed","mean"))
     training_summary["event_type"]="Training"; training_summary["avg_qa_score"]=np.nan; training_summary["review_rate"]=np.nan
-    pd.concat([qa_summary,training_summary],ignore_index=True)[["team","event_type","events","avg_qa_score","review_rate","training_minutes","completion_rate"]].to_csv(OUT/"qa_training_split.csv",index=False)
-    chats.groupby(["reason","escalated"],as_index=False).agg(interactions=("interaction_id","count"),avg_response_minutes=("first_response_minutes","mean"),conversion_rate=("converted","mean")).to_csv(OUT/"reason_escalation_deep_dive.csv",index=False)
+    qa_training=pd.concat([qa_summary,training_summary],ignore_index=True)[["team","event_type","events","avg_qa_score","review_rate","training_minutes","completion_rate"]]
+    qa_training["is_synthetic"]=source_is_synthetic
+    qa_training.to_csv(OUT/"qa_training_split.csv",index=False)
+    reason_summary=chats.groupby(["reason","escalated"],as_index=False).agg(interactions=("interaction_id","count"),avg_response_minutes=("first_response_minutes","mean"),conversion_rate=("converted","mean"))
+    reason_summary["is_synthetic"]=source_is_synthetic
+    reason_summary.to_csv(OUT/"reason_escalation_deep_dive.csv",index=False)
     # Data quality audit results, with hard fails for critical source contract violations.
     dq=[]
     def add(check,passed,detail): dq.append({"check":check,"passed":bool(passed),"detail":str(detail)})
