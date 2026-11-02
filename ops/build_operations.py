@@ -1,0 +1,203 @@
+"""Build deterministic synthetic chat operations, WFM plans and service-risk packs.
+
+All generated operational facts are synthetic. Forecasts use a transparent weekday/hour
+seasonal-naive baseline and queueing approximation; they are planning signals, not truth.
+"""
+from __future__ import annotations
+import argparse
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+RAW = ROOT / "data" / "demo" / "operations"
+OUT = ROOT / "data" / "output" / "operations"
+SEED = 20261102
+REGIONS = {"AMER": "America/New_York", "EMEA": "Europe/London", "APAC": "Asia/Singapore"}
+LANGUAGES = ["English", "Spanish", "French", "German", "Japanese"]
+CHANNELS = ["Chat", "Messaging", "Email"]
+MARKETS = {"AMER": ["US", "CA", "MX"], "EMEA": ["UK", "DE", "FR"], "APAC": ["SG", "AU", "JP"]}
+TEAMS = ["Core Support", "Billing", "Technical Support", "Retention"]
+
+
+def make_demo(days: int = 56) -> None:
+    """Create source-like, openly-labelled synthetic workload/agent/QA data."""
+    rng = np.random.default_rng(SEED)
+    RAW.mkdir(parents=True, exist_ok=True)
+    dates = pd.date_range("2026-08-01", periods=days, freq="D")
+    agents = []
+    for i in range(1, 91):
+        region = ["AMER", "EMEA", "APAC"][(i - 1) % 3]
+        lang = LANGUAGES[(i - 1) % len(LANGUAGES)]
+        team = TEAMS[(i - 1) % len(TEAMS)]
+        tz = REGIONS[region]
+        agents.append({"agent_id": f"AG{i:03d}", "team": team, "home_region": region,
+                       "home_language": lang, "time_zone": tz, "contract_hours_week": 40,
+                       "employment_status": "Active", "is_synthetic": True})
+    pd.DataFrame(agents).to_csv(RAW / "agents.csv", index=False)
+    # Effective-dated changes; intervals are [effective_from, effective_to).
+    transfers = pd.DataFrame([
+        {"agent_id":"AG004","effective_from":"2026-09-01","effective_to":"","region":"EMEA","language":"French","channel":"Chat","team":"Billing","time_zone":"Europe/Paris"},
+        {"agent_id":"AG011","effective_from":"2026-09-08","effective_to":"","region":"APAC","language":"Japanese","channel":"Messaging","team":"Technical Support","time_zone":"Asia/Tokyo"},
+        {"agent_id":"AG021","effective_from":"2026-09-15","effective_to":"","region":"AMER","language":"Spanish","channel":"Chat","team":"Retention","time_zone":"America/Mexico_City"},
+        {"agent_id":"AG030","effective_from":"2026-09-20","effective_to":"","region":"EMEA","language":"German","channel":"Email","team":"Core Support","time_zone":"Europe/Berlin"},
+    ])
+    transfers.to_csv(RAW / "agent_assignments.csv", index=False)
+    chats=[]; qa=[]
+    chat_id=1
+    for day in dates:
+        dow=day.dayofweek
+        for region in REGIONS:
+            for hour in range(24):
+                # Distinct local-time operational demand pattern by region.
+                local_peak = 14 if region=="AMER" else (10 if region=="EMEA" else 11)
+                shape = 0.55 + 0.95*np.exp(-((hour-local_peak)/5.0)**2)
+                day_factor = 0.72 if dow>=5 else 1.0
+                for language in LANGUAGES:
+                    if (region=="AMER" and language not in ["English","Spanish","French"]) or (region=="EMEA" and language not in ["English","French","German"]) or (region=="APAC" and language not in ["English","Japanese"]):
+                        continue
+                    for channel in CHANNELS:
+                        channel_factor={"Chat":1.0,"Messaging":0.55,"Email":0.30}[channel]
+                        volume=max(0,int(rng.poisson(2.8*shape*day_factor*channel_factor)))
+                        for _ in range(volume):
+                            team=TEAMS[int(rng.integers(0,len(TEAMS)))]
+                            offered=int(rng.random()<0.88)
+                            resolved=int(offered and rng.random()<0.91)
+                            response=float(np.clip(rng.gamma(2.0,1.8)+(0.7 if not offered else 0),0.2,40))
+                            handle=float(rng.lognormal(2.55,0.38))
+                            converted=int(resolved and rng.random() < (0.20 if team=="Retention" else 0.11))
+                            chats.append({"interaction_id":f"CH{chat_id:07d}","created_at":f"{day.date()} {hour:02d}:00:00",
+                                "region":region,"language":language,"channel":channel,"market":str(rng.choice(MARKETS[region])),
+                                "team":team,"offered":offered,"resolved":resolved,"first_response_minutes":round(response,2),
+                                "handle_minutes":round(handle,2),"converted":converted,"queue_wait_minutes":round(float(rng.gamma(1.7,2.0)),2),
+                                "reason":str(rng.choice(["How-to","Billing query","Technical issue","Cancellation","Order status","Account access"],p=[.22,.19,.20,.10,.17,.12])),
+                                "escalated":int(rng.random()<(.16 if team=="Technical Support" else .07)), "is_synthetic":True})
+                            if resolved:
+                                qa.append({"interaction_id":f"CH{chat_id:07d}","qa_score":round(float(np.clip(rng.normal(88,8),50,100)),1),
+                                           "training_flag":int(rng.random()<.09),"reviewed":int(rng.random()<.72),"is_synthetic":True})
+                            chat_id+=1
+    pd.DataFrame(chats).to_csv(RAW/"chat_interactions.csv",index=False)
+    pd.DataFrame(qa).to_csv(RAW/"qa_training.csv",index=False)
+
+
+def apply_effective_assignments(agents: pd.DataFrame, assignments: pd.DataFrame, date: pd.Timestamp) -> pd.DataFrame:
+    """Resolve one current assignment per agent using effective-dated transfer rows."""
+    x=agents.rename(columns={"home_region":"region","home_language":"language"}).copy()
+    x["channel"]="Chat"; x["effective_from"]="1900-01-01"; x["effective_to"]=""
+    a=assignments.copy()
+    if not a.empty:
+        a["effective_from"]=pd.to_datetime(a["effective_from"])
+        a["effective_to"]=pd.to_datetime(a["effective_to"],errors="coerce")
+        a=a[(a.effective_from<=date)&(a.effective_to.isna()|(a.effective_to>date))]
+        for row in a.to_dict("records"):
+            m=x.agent_id.eq(row["agent_id"])
+            for col in ["region","language","channel","team","time_zone"]: x.loc[m,col]=row[col]
+    return x
+
+
+def build(start: str="2026-08-01", end: str="2026-09-25", regenerate: bool=False) -> dict:
+    if regenerate or not (RAW/"chat_interactions.csv").exists(): make_demo()
+    OUT.mkdir(parents=True,exist_ok=True)
+    chats=pd.read_csv(RAW/"chat_interactions.csv",parse_dates=["created_at"])
+    agents=pd.read_csv(RAW/"agents.csv")
+    transfers=pd.read_csv(RAW/"agent_assignments.csv")
+    qa=pd.read_csv(RAW/"qa_training.csv")
+    chats=chats[(chats.created_at.dt.date>=pd.Timestamp(start).date())&(chats.created_at.dt.date<=pd.Timestamp(end).date())].copy()
+    if chats.empty: raise ValueError("No chat interactions in requested reporting window")
+    chats["date"]=chats.created_at.dt.strftime("%Y-%m-%d")
+    chats["hour"]=chats.created_at.dt.hour
+    # Real regional dimensions; there are no Site A/B/C values in this model.
+    dims=["date","hour","region","language","channel","market","team"]
+    hourly=chats.groupby(dims,dropna=False).agg(contacts=("interaction_id","count"),offered=("offered","sum"),resolved=("resolved","sum"),
+       conversions=("converted","sum"),avg_response_minutes=("first_response_minutes","mean"),p90_response_minutes=("first_response_minutes",lambda s:s.quantile(.9)),
+       avg_handle_minutes=("handle_minutes","mean"),avg_queue_wait_minutes=("queue_wait_minutes","mean"),escalations=("escalated","sum")).reset_index()
+    hourly["service_level_5m"]=chats.groupby(dims).first_response_minutes.apply(lambda s:(s<=5).mean()).values
+    hourly.to_csv(OUT/"chat_hourly_by_region_language_channel_market_team.csv",index=False)
+    # Hour-of-week profile with trend-adjusted last 14 days; forecast next seven days.
+    chats["weekday"]=chats.created_at.dt.dayofweek
+    hist=chats.groupby(["region","language","channel","team","weekday","hour"],as_index=False).agg(actual_contacts=("interaction_id","count"))
+    recent_cut=chats.created_at.max()-pd.Timedelta(days=14)
+    recent=chats[chats.created_at>=recent_cut].groupby(["region","language","channel","team","weekday","hour"]).size().rename("recent_contacts").reset_index()
+    hist=hist.merge(recent,on=["region","language","channel","team","weekday","hour"],how="left").fillna({"recent_contacts":0})
+    hist["forecast_contacts_per_hour"]=(0.65*hist.actual_contacts/max(1,chats.date.nunique())+0.35*hist.recent_contacts/max(1,(chats.created_at.max().normalize()-recent_cut.normalize()).days+1))
+    hist["forecast_contacts_per_hour"]=hist.forecast_contacts_per_hour.clip(lower=0).round(2)
+    future=pd.date_range(pd.Timestamp(end)+pd.Timedelta(days=1),periods=7,freq="D")
+    f=[]
+    for d in future:
+        tmp=hist[hist.weekday.eq(d.dayofweek)].copy(); tmp["forecast_date"]=d.strftime("%Y-%m-%d"); f.append(tmp)
+    forecast=pd.concat(f,ignore_index=True)
+    # Erlang-style workload approximation: workload hours / interval hours / occupancy.
+    forecast["workload_hours"]=forecast.forecast_contacts_per_hour*forecast.channel.map({"Chat":7.5,"Messaging":6.5,"Email":9.0})/60
+    forecast["required_agents"]=np.ceil(forecast.workload_hours/(0.5*0.82)).astype(int)
+    forecast["forecast_method"]="weekday-hour seasonal baseline (65% full-window profile, 35% recent profile)"
+    forecast.to_csv(OUT/"hourly_demand_forecast.csv",index=False)
+    # Build a transparent 8h shift plan; shift windows in local timezone, assignment effective at forecast date.
+    shift_rows=[]
+    for d in future:
+        active=apply_effective_assignments(agents,transfers,d)
+        for region in REGIONS:
+            for team in TEAMS:
+                for channel in CHANNELS:
+                    for shift,start_hour in [("Early",6),("Core",14),("Late",22)]:
+                        local_hours={(start_hour+i)%24 for i in range(8)}
+                        demand=forecast[(forecast.forecast_date==d.strftime("%Y-%m-%d"))&(forecast.region==region)&(forecast.team==team)&(forecast.channel==channel)&(forecast.hour.isin(local_hours))]
+                        req=int(demand.required_agents.max()) if not demand.empty else 0
+                        eligible=active[(active.region==region)&(active.team==team)&((active.channel==channel)|(active.channel=="Chat"))]
+                        # Allocated agents capped by available headcount; this is capacity planning, not a roster.
+                        allocated=min(len(eligible),req)
+                        shift_rows.append({"date":d.strftime("%Y-%m-%d"),"region":region,"team":team,"channel":channel,"shift":shift,
+                          "local_start_hour":start_hour,"local_end_hour":(start_hour+8)%24,"required_agents":req,"available_agents":len(eligible),
+                          "allocated_agents":allocated,"coverage_gap":max(0,req-allocated),"time_zone":REGIONS[region],"is_synthetic":True})
+    shifts=pd.DataFrame(shift_rows); shifts.to_csv(OUT/"shift_allocation.csv",index=False)
+    # Daily service/commercial risk table. Thresholds documented and configurable in code.
+    daily=chats.groupby(["date","region","language","channel","market","team"],as_index=False).agg(contacts=("interaction_id","count"),
+      avg_response_minutes=("first_response_minutes","mean"),p90_response_minutes=("first_response_minutes",lambda s:s.quantile(.9)),
+      conversion_rate=("converted","mean"),avg_queue_wait_minutes=("queue_wait_minutes","mean"),escalations=("escalated","sum"),offered=("offered","sum"))
+    gap=shifts.groupby(["date","region","team","channel"],as_index=False).agg(uncovered_shift_hours=("coverage_gap",lambda s:int((s>0).sum())),max_agent_gap=("coverage_gap","max"))
+    daily=daily.merge(gap,on=["date","region","team","channel"],how="left").fillna({"uncovered_shift_hours":0,"max_agent_gap":0})
+    daily["risk_reasons"]=daily.apply(lambda r:"; ".join([x for x,v in [("coverage gap",r.max_agent_gap>0),("slow response",r.p90_response_minutes>10),("low conversion",r.conversion_rate<.08),("queue saturation",r.avg_queue_wait_minutes>8)] if v]) or "none",axis=1)
+    daily["risk_level"]=daily.risk_reasons.map(lambda x:"HIGH" if sum(k in x for k in ["coverage gap","slow response","queue saturation"])>=2 else ("MEDIUM" if x!="none" else "LOW"))
+    daily.to_csv(OUT/"daily_service_commercial_risk.csv",index=False)
+    # Daily tracker, weekly capacity brief, monthly exec summary.
+    tracker=daily.groupby(["date","region"],as_index=False).agg(contacts=("contacts","sum"),avg_response_minutes=("avg_response_minutes","mean"),
+      conversion_rate=("conversion_rate","mean"),high_risk_segments=("risk_level",lambda s:int((s=="HIGH").sum())),uncovered_shift_hours=("uncovered_shift_hours","sum"))
+    tracker.to_csv(OUT/"daily_tracker.csv",index=False)
+    weekly=shifts.assign(week=pd.to_datetime(shifts.date).dt.to_period("W").astype(str)).groupby(["week","region","team","channel"],as_index=False).agg(required_agent_shifts=("required_agents","sum"),allocated_agent_shifts=("allocated_agents","sum"),coverage_gap_shifts=("coverage_gap",lambda s:int((s>0).sum())),peak_gap=("coverage_gap","max"))
+    weekly.to_csv(OUT/"weekly_capacity_brief.csv",index=False)
+    chats["month"]=chats.created_at.dt.to_period("M").astype(str)
+    monthly=chats.groupby(["month","region"],as_index=False).agg(contacts=("interaction_id","count"),resolved=("resolved","sum"),conversions=("converted","sum"),
+      avg_response_minutes=("first_response_minutes","mean"),revenue_proxy_conversions=("converted","sum"))
+    monthly["resolution_rate"]=monthly.resolved/monthly.contacts
+    monthly["conversion_rate"]=monthly.conversions/monthly.contacts
+    monthly.to_csv(OUT/"monthly_executive_summary.csv",index=False)
+    # Team/agent productivity and QA/training split. Demo agent mapping round-robin, not identity evidence.
+    ids=chats[["interaction_id","team","resolved","handle_minutes","escalated"]].copy()
+    ids["agent_id"]=["AG%03d"%((i%90)+1) for i in range(len(ids))]
+    prod=ids.groupby(["agent_id","team"],as_index=False).agg(handled=("interaction_id","count"),resolved=("resolved","sum"),handle_minutes=("handle_minutes","sum"),escalations=("escalated","sum"))
+    prod["resolution_rate"]=prod.resolved/prod.handled
+    prod.to_csv(OUT/"agent_team_productivity.csv",index=False)
+    team=prod.groupby("team",as_index=False).agg(agents=("agent_id","nunique"),handled=("handled","sum"),resolved=("resolved","sum"),avg_handle_minutes=("handle_minutes",lambda s:s.sum()/max(1,prod.loc[s.index,"handled"].sum())),escalations=("escalations","sum"))
+    team["resolution_rate"]=team.resolved/team.handled
+    team.to_csv(OUT/"team_productivity.csv",index=False)
+    q=qa.merge(chats[["interaction_id","team","reason","escalated"]],on="interaction_id",how="inner")
+    q.groupby(["team","training_flag"],as_index=False).agg(reviews=("interaction_id","count"),avg_qa_score=("qa_score","mean"),review_rate=("reviewed","mean")).to_csv(OUT/"qa_training_split.csv",index=False)
+    chats.groupby(["reason","escalated"],as_index=False).agg(interactions=("interaction_id","count"),avg_response_minutes=("first_response_minutes","mean"),conversion_rate=("converted","mean")).to_csv(OUT/"reason_escalation_deep_dive.csv",index=False)
+    # Data quality audit results, with hard fails for critical source contract violations.
+    dq=[]
+    def add(check,passed,detail): dq.append({"check":check,"passed":bool(passed),"detail":str(detail)})
+    add("unique interaction_id",chats.interaction_id.is_unique,f"rows={len(chats)}")
+    add("non-negative volumes",bool((hourly.contacts>=0).all()),f"segments={len(hourly)}")
+    add("allowed region dimension",set(chats.region)<=set(REGIONS),str(sorted(chats.region.unique())))
+    add("no fictional site labels",not chats.region.astype(str).str.match(r"Site [ABC]").any(),"region must be AMER/EMEA/APAC")
+    add("response-time valid",bool(chats.first_response_minutes.ge(0).all()),"minutes >= 0")
+    add("QA interaction referential integrity",set(qa.interaction_id)<=set(pd.read_csv(RAW/"chat_interactions.csv").interaction_id),"QA rows reference chat IDs")
+    add("effective-dated assignments valid",pd.to_datetime(transfers.effective_from).notna().all(),"effective_from required")
+    add("forecast nonnegative",bool(forecast.forecast_contacts_per_hour.ge(0).all()),"forecast >= 0")
+    add("capacity allocation bounded",bool((shifts.allocated_agents<=shifts.available_agents).all()),"allocated <= available")
+    pd.DataFrame(dq).to_csv(OUT/"data_quality_checks.csv",index=False)
+    if not all(x["passed"] for x in dq): raise ValueError("Operational data-quality checks failed")
+    return {"chat_rows":len(chats),"hourly_segments":len(hourly),"forecast_rows":len(forecast),"shift_rows":len(shifts),"risk_rows":len(daily),"checks":len(dq)}
+
+if __name__=="__main__":
+    p=argparse.ArgumentParser(); p.add_argument("--generate-demo",action="store_true"); p.add_argument("--start",default="2026-08-01"); p.add_argument("--end",default="2026-09-25"); a=p.parse_args()
+    print(build(a.start,a.end,a.generate_demo))
